@@ -22,7 +22,7 @@ RSpec.describe "Api::V1::Countries", type: :request do
       expect(kenya).to include(
         "iso2" => "KE", "iso3" => "KEN", "phonecode" => "+254", "capital" => "Nairobi",
         "currency" => "KES", "currency_symbol" => "KSh", "region" => "Africa",
-        "emoji" => "🇰🇪", "emoji_u" => "U+1F1F0 U+1F1EA", "timezone" => "Africa/Nairobi", "gmt_offset" => 180
+        "timezone" => "Africa/Nairobi", "gmt_offset" => 180
       )
       expect(kenya["latitude"]).to eq(1.0)
       expect(kenya["longitude"]).to eq(38.0)

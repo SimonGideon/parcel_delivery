@@ -16,8 +16,6 @@ class CountrySerializer
       region: country.region,
       latitude: country.latitude&.to_f,
       longitude: country.longitude&.to_f,
-      emoji: country.emoji,
-      emoji_u: country.emoji_u,
       timezone: country.timezone,
       gmt_offset: country.gmt_offset
     }

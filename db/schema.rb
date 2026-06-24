@@ -57,8 +57,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_163334) do
     t.string "region"
     t.decimal "latitude", precision: 10, scale: 6
     t.decimal "longitude", precision: 10, scale: 6
-    t.string "emoji", limit: 191
-    t.string "emoji_u", limit: 191
     t.string "timezone"
     t.integer "gmt_offset"
     t.index ["name"], name: "index_countries_on_name", unique: true
