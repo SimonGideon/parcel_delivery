@@ -109,6 +109,9 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       body = JSON.parse(response.body)
       expect(body["data"].map { |d| d["id"] }).to eq([mine.id])
       expect(body["meta"]).to include("current_page", "total_pages", "total_count")
+      expect(body.dig("meta", "filters", "allowed_statuses")).to eq(
+        %w[pending finding_driver assigned accepted picked_up in_transit delivered cancelled]
+      )
     end
 
     it "returns the authenticated driver's assigned requests and rejected request history" do
@@ -144,6 +147,30 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
 
       body = JSON.parse(response.body)
       expect(body["data"].map { |d| d["id"] }).to eq([pending_request.id])
+    end
+
+    it "filters driver requests only by statuses relevant to driver-visible requests" do
+      assigned = create(:delivery_request, driver: driver, status: :assigned)
+      create(:delivery_request, driver: driver, status: :accepted)
+
+      get "/api/v1/delivery_requests", params: { status: "assigned" },
+        headers: basic_auth_headers(driver.email, "password123")
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([assigned.id])
+      expect(body.dig("meta", "filters", "allowed_statuses")).to eq(
+        %w[finding_driver assigned accepted picked_up in_transit delivered cancelled]
+      )
+    end
+
+    it "rejects status filters that are not valid for the current principal" do
+      get "/api/v1/delivery_requests", params: { status: "pending" },
+        headers: basic_auth_headers(driver.email, "password123")
+
+      expect(response).to have_http_status(:bad_request)
+      body = JSON.parse(response.body)
+      expect(body["message"]).to include("Allowed statuses: finding_driver, assigned")
     end
 
     it "returns 400 for an unknown status filter" do

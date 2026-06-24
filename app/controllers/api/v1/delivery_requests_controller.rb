@@ -13,6 +13,9 @@ module Api
         "package_weight" => "package_weight"
       }.freeze
       SORT_DIRECTIONS = %w[asc desc].freeze
+      DRIVER_FILTERABLE_STATUSES = %w[
+        finding_driver assigned accepted picked_up in_transit delivered cancelled
+      ].freeze
       DEFAULT_PER_PAGE = 25
       MAX_PER_PAGE = 100
 
@@ -33,7 +36,9 @@ module Api
         render_success(
           data: delivery_requests.map { |dr| DeliveryRequestSerializer.new(dr).as_json },
           message: "Delivery requests retrieved successfully",
-          meta: pagination_meta(delivery_requests)
+          meta: pagination_meta(delivery_requests).merge(
+            filters: { allowed_statuses: filterable_statuses }
+          )
         )
       end
 
@@ -134,7 +139,7 @@ module Api
       end
 
       def validation_error
-        return "Invalid status filter: #{params[:status]}" if invalid_status?
+        return invalid_status_message if invalid_status?
         return "Invalid sort_by: #{params[:sort_by]}" if invalid_sort_by?
         return "Invalid sort_direction: #{params[:sort_direction]}" if invalid_sort_direction?
         return "created_from must be a valid ISO8601 date/time" if params[:created_from].present? && created_from.nil?
@@ -144,7 +149,17 @@ module Api
       end
 
       def invalid_status?
-        params[:status].present? && !DeliveryRequest.statuses.key?(params[:status])
+        params[:status].present? && filterable_statuses.exclude?(params[:status])
+      end
+
+      def invalid_status_message
+        "Invalid status filter: #{params[:status]}. Allowed statuses: #{filterable_statuses.join(', ')}"
+      end
+
+      def filterable_statuses
+        return DeliveryRequest.statuses.keys if current_user
+
+        DRIVER_FILTERABLE_STATUSES
       end
 
       def invalid_sort_by?

@@ -146,18 +146,9 @@ paths:
       - name: status
         in: query
         required: false
-        enum:
-        - pending
-        - finding_driver
-        - assigned
-        - accepted
-        - picked_up
-        - in_transit
-        - delivered
-        - cancelled
-        description: "Filter by lifecycle status:\n * `pending` \n * `finding_driver`
-          \n * `assigned` \n * `accepted` \n * `picked_up` \n * `in_transit` \n *
-          `delivered` \n * `cancelled` \n "
+        description: Filter by lifecycle status. Allowed values are role-specific
+          and are returned in meta.filters.allowed_statuses. Customer tokens may filter
+          all lifecycle statuses; driver tokens may filter only driver-visible statuses.
         schema:
           type: string
       - name: driver_id
@@ -196,7 +187,8 @@ paths:
         - updated_at
         - status
         - package_weight
-        description: Sort field. Defaults to created_at
+        description: "Sort field. Defaults to created_at:\n * `created_at` \n * `updated_at`
+          \n * `status` \n * `package_weight` \n "
         schema:
           type: string
       - name: sort_direction
@@ -431,13 +423,28 @@ paths:
                       total_count:
                         type: integer
                         example: 1
+                      filters:
+                        type: object
+                        properties:
+                          allowed_statuses:
+                            type: array
+                            items:
+                              type: string
+                            example:
+                            - finding_driver
+                            - assigned
+                            - accepted
+                            - picked_up
+                            - in_transit
+                            - delivered
+                            - cancelled
                 required:
                 - success
                 - message
                 - data
                 - meta
         '400':
-          description: unknown status filter
+          description: unknown or unauthorized status filter
           content:
             application/json:
               schema:
@@ -448,7 +455,8 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: 'Invalid status filter: bogus'
+                    example: 'Invalid status filter: pending. Allowed statuses: finding_driver,
+                      assigned, accepted, picked_up, in_transit, delivered, cancelled'
                   errors:
                     type: array
                     items:

@@ -97,8 +97,12 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       DESC
 
       parameter name: :status, in: :query, type: :string, required: false,
-        enum: %w[pending finding_driver assigned accepted picked_up in_transit delivered cancelled],
-        description: "Filter by lifecycle status"
+        description: <<~DESC.squish
+          Filter by lifecycle status. Allowed values are role-specific and are
+          returned in meta.filters.allowed_statuses. Customer tokens may filter
+          all lifecycle statuses; driver tokens may filter only driver-visible
+          statuses.
+        DESC
       parameter name: :driver_id, in: :query, type: :string, format: :uuid, required: false,
         description: "Filter visible requests by assigned driver id"
       parameter name: :created_from, in: :query, type: :string, format: "date-time", required: false,
@@ -131,7 +135,17 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                      next_page: { type: :integer, nullable: true },
                      prev_page: { type: :integer, nullable: true },
                      total_pages: { type: :integer, example: 1 },
-                     total_count: { type: :integer, example: 1 }
+                     total_count: { type: :integer, example: 1 },
+                     filters: {
+                       type: :object,
+                       properties: {
+                         allowed_statuses: {
+                           type: :array,
+                           items: { type: :string },
+                           example: %w[finding_driver assigned accepted picked_up in_transit delivered cancelled]
+                         }
+                       }
+                     }
                    }
                  }
                },
@@ -142,11 +156,11 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
         run_test!
       end
 
-      response "400", "unknown status filter" do
-        schema error_envelope.call("Invalid status filter: bogus")
+      response "400", "unknown or unauthorized status filter" do
+        schema error_envelope.call("Invalid status filter: pending. Allowed statuses: finding_driver, assigned, accepted, picked_up, in_transit, delivered, cancelled")
 
-        let(:Authorization) { user_auth }
-        let(:status) { "bogus" }
+        let(:Authorization) { driver_auth }
+        let(:status) { "pending" }
         run_test!
       end
     end
