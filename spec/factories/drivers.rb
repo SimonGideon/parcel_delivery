@@ -1,9 +1,15 @@
 FactoryBot.define do
   factory :driver do
-    name { "MyString" }
-    email { "MyString" }
-    password_digest { "MyString" }
-    phone { "MyString" }
-    status { 1 }
+    name { Faker::Name.name }
+    sequence(:email) { |n| "driver#{n}@example.com" }
+    password { "password123" }
+    phone { Faker::PhoneNumber.phone_number }
+    status { :available }
+
+    trait :with_location do
+      after(:create) do |driver|
+        create(:driver_location, driver: driver)
+      end
+    end
   end
 end

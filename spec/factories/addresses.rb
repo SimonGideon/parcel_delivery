@@ -1,12 +1,11 @@
 FactoryBot.define do
   factory :address do
-    line1 { "MyString" }
-    line2 { "MyString" }
-    city { "MyString" }
-    state { "MyString" }
-    postal_code { "MyString" }
-    country { "MyString" }
-    latitude { "9.99" }
-    longitude { "9.99" }
+    line1 { Faker::Address.street_address }
+    city { Faker::Address.city }
+    state { Faker::Address.state }
+    postal_code { Faker::Address.zip_code }
+    country { Faker::Address.country }
+    latitude { Faker::Address.latitude }
+    longitude { Faker::Address.longitude }
   end
 end

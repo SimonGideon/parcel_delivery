@@ -43,7 +43,7 @@ class ApplicationController < ActionController::API
         message: error.record.errors.full_messages.to_sentence,
         details: error.record.errors.to_hash
       }
-    }, status: :unprocessable_entity
+    }, status: :unprocessable_content
   end
 
   def render_bad_request(error)

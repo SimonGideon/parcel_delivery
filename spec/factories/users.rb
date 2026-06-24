@@ -1,8 +1,8 @@
 FactoryBot.define do
   factory :user do
-    name { "MyString" }
-    email { "MyString" }
-    password_digest { "MyString" }
-    phone { "MyString" }
+    name { Faker::Name.name }
+    sequence(:email) { |n| "user#{n}@example.com" }
+    password { "password123" }
+    phone { Faker::PhoneNumber.phone_number }
   end
 end
