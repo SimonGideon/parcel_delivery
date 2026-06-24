@@ -7,7 +7,7 @@ RSpec.describe "api/v1/countries", type: :request do
       produces "application/json"
 
       response "200", "countries returned" do
-        before { create(:country, name: "Kenya", code: "KE") }
+        before { create(:country, name: "Kenya", iso2: "KE") }
         run_test!
       end
     end

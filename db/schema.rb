@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_24_160830) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -46,9 +46,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
 
   create_table "countries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
-    t.string "code"
+    t.string "iso2"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "iso3", limit: 3
+    t.string "phonecode"
+    t.string "capital"
+    t.string "currency"
+    t.string "currency_symbol"
+    t.string "region"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
     t.index ["name"], name: "index_countries_on_name", unique: true
   end
 

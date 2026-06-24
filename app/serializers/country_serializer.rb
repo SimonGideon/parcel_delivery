@@ -7,7 +7,15 @@ class CountrySerializer
     {
       id: country.id,
       name: country.name,
-      code: country.code
+      iso2: country.iso2,
+      iso3: country.iso3,
+      phonecode: country.phonecode,
+      capital: country.capital,
+      currency: country.currency,
+      currency_symbol: country.currency_symbol,
+      region: country.region,
+      latitude: country.latitude&.to_f,
+      longitude: country.longitude&.to_f
     }
   end
 
