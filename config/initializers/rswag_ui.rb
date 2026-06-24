@@ -10,6 +10,9 @@ Rswag::Ui.configure do |c|
 
   c.openapi_endpoint '/docs/v1/swagger.yaml', 'API V1 Docs'
 
+  # Keep Authorize credentials across Try-it-out requests and page reloads.
+  c.config_object[:persistAuthorization] = true
+
   # Add Basic Auth in case your API is private
   # c.basic_auth_enabled = true
   # c.basic_auth_credentials 'username', 'password'

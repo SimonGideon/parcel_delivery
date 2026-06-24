@@ -48,13 +48,25 @@ module Authenticatable
     @current_driver
   end
 
+  # Omit WWW-Authenticate so browsers don't show a native Basic-auth dialog
+  # on 401; API clients (Swagger UI, curl -u) send Authorization explicitly.
   def render_unauthorized
-    response.set_header("WWW-Authenticate", 'Basic realm="Application"')
+    message = if basic_credentials_sent?
+                "Invalid credentials for this endpoint"
+              else
+                "Missing Authorization header — click Authorize in Swagger and use your account email as the username"
+              end
+
     render json: {
       error: {
         code: "unauthorized",
-        message: "Invalid or missing credentials"
+        message: message
       }
     }, status: :unauthorized
+  end
+
+  def basic_credentials_sent?
+    request.authorization.present? &&
+      request.authorization.split(" ", 2).first.casecmp("basic").zero?
   end
 end

@@ -27,6 +27,11 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       consumes "application/json"
       produces "application/json"
       security [{ basic_auth: [] }]
+      description <<~DESC
+        Requires **customer** credentials. Register via POST /api/v1/users, then
+        Authorize with that email (username) and password. Driver credentials
+        will not work on this endpoint.
+      DESC
 
       parameter name: :delivery_request, in: :body, schema: {
         type: :object,
@@ -78,6 +83,21 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
 
       response "201", "delivery request created" do
         let(:Authorization) { user_auth }
+        let(:delivery_request) do
+          {
+            delivery_request: {
+              package_description: "Books",
+              package_weight: 2.5,
+              pickup_address: { line1: "123 Main St", city: "Nairobi", latitude: 1.2945, longitude: 36.8228 },
+              delivery_address: { line1: "456 Side St", city: "Nairobi", latitude: 1.3, longitude: 36.83 }
+            }
+          }
+        end
+        run_test!
+      end
+
+      response "401", "missing or invalid credentials" do
+        let(:Authorization) { "" }
         let(:delivery_request) do
           {
             delivery_request: {

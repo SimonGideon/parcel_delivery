@@ -32,7 +32,19 @@ RSpec.configure do |config|
           basic_auth: {
             type: :http,
             scheme: :basic,
-            description: 'Email and password for either a customer (User) or a Driver, depending on the endpoint.'
+            description: <<~DESC.squish
+              HTTP Basic authentication. In the Authorize dialog, enter your account
+              email as the username and your password. Register first via POST
+              /api/v1/users (customers) or POST /api/v1/drivers (drivers). Some
+              endpoints accept only one principal type — e.g. POST /delivery_requests
+              requires customer credentials, not driver.
+
+              To test with different credentials, click "Logout" in this dialog
+              first. Once authorized, Swagger UI hides the username/password
+              fields and reuses the saved Authorization header for every
+              "Try it out" call until you log out — typing new (even wrong)
+              credentials without logging out first has no effect.
+            DESC
           }
         }
       }
