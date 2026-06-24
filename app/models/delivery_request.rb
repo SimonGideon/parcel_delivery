@@ -5,12 +5,14 @@ class DeliveryRequest < ApplicationRecord
   belongs_to :delivery_address, class_name: "Address"
   has_many :delivery_events, -> { order(occurred_at: :asc) }, dependent: :destroy
 
+  # "rejected" is intentionally not a status here: a driver rejection sends the
+  # request straight back to finding_driver for the next candidate. The rejection
+  # itself is recorded as a DeliveryEvent (driver_rejected), not a request status.
   enum :status, {
     pending: 0,
     finding_driver: 1,
     assigned: 2,
     accepted: 3,
-    rejected: 4,
     picked_up: 5,
     in_transit: 6,
     delivered: 7,

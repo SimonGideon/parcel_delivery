@@ -61,4 +61,8 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Enqueue jobs synchronously-on-demand via ActiveJob::TestHelper's
+  # perform_enqueued_jobs, instead of actually running them on a background thread.
+  config.active_job.queue_adapter = :test
 end
