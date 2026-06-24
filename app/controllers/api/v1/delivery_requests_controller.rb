@@ -76,12 +76,12 @@ module Api
 
       def pickup_address_params
         params.require(:delivery_request).require(:pickup_address)
-          .permit(:line1, :line2, :city, :state, :postal_code, :country, :latitude, :longitude)
+          .permit(:line1, :line2, :city, :county, :nearest_town, :postal_code, :country, :latitude, :longitude)
       end
 
       def delivery_address_params
         params.require(:delivery_request).require(:delivery_address)
-          .permit(:line1, :line2, :city, :state, :postal_code, :country, :latitude, :longitude)
+          .permit(:line1, :line2, :city, :county, :nearest_town, :postal_code, :country, :latitude, :longitude)
       end
     end
   end

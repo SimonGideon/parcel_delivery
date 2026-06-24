@@ -43,6 +43,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "123 Main St" },
                   city: { type: :string, example: "Nairobi" },
+                  county: { type: :string, example: "Nairobi" },
+                  nearest_town: { type: :string, example: "Near Total Petrol Station, Ruiru" },
                   latitude: { type: :number, example: 1.2945 },
                   longitude: { type: :number, example: 36.8228 }
                 },
@@ -53,6 +55,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "456 Side St" },
                   city: { type: :string, example: "Nairobi" },
+                  county: { type: :string, example: "Nairobi" },
+                  nearest_town: { type: :string, example: "Near Garden City Mall" },
                   latitude: { type: :number, example: 1.3 },
                   longitude: { type: :number, example: 36.83 }
                 },

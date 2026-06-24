@@ -90,6 +90,12 @@ paths:
                         city:
                           type: string
                           example: Nairobi
+                        county:
+                          type: string
+                          example: Nairobi
+                        nearest_town:
+                          type: string
+                          example: Near Total Petrol Station, Ruiru
                         latitude:
                           type: number
                           example: 1.2945
@@ -110,6 +116,12 @@ paths:
                         city:
                           type: string
                           example: Nairobi
+                        county:
+                          type: string
+                          example: Nairobi
+                        nearest_town:
+                          type: string
+                          example: Near Garden City Mall
                         latitude:
                           type: number
                           example: 1.3

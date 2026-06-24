@@ -2,9 +2,10 @@ FactoryBot.define do
   factory :address do
     line1 { Faker::Address.street_address }
     city { Faker::Address.city }
-    state { Faker::Address.state }
+    county { %w[Nairobi Mombasa Kisumu Nakuru Kiambu Uasin\ Gishu Machakos].sample }
+    nearest_town { Faker::Address.city }
     postal_code { Faker::Address.zip_code }
-    country { Faker::Address.country }
+    country { "Kenya" }
     latitude { Faker::Address.latitude }
     longitude { Faker::Address.longitude }
   end
