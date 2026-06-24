@@ -19,9 +19,15 @@ Rails.application.routes.draw do
       resources :countries, only: %i[index]
       resources :counties, only: %i[index]
 
-      resources :delivery_requests, only: %i[index show create] do
+      get "customer/delivery_requests", to: "delivery_requests#customer_index"
+      get "driver/delivery_requests", to: "delivery_requests#driver_index"
+
+      resources :delivery_requests, only: %i[show create] do
+        post :cancel, on: :member
         post :accept, on: :member
         post :reject, on: :member
+        post :pick_up, on: :member
+        post :deliver, on: :member
 
         resources :events, only: %i[index], controller: "delivery_events"
       end

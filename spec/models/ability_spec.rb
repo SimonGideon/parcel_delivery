@@ -11,7 +11,9 @@ RSpec.describe Ability, type: :model do
 
     it { is_expected.to be_able_to(:create, DeliveryRequest) }
     it { is_expected.to be_able_to(:read, own_request) }
+    it { is_expected.to be_able_to(:cancel, own_request) }
     it { is_expected.not_to be_able_to(:read, other_request) }
+    it { is_expected.not_to be_able_to(:cancel, other_request) }
     it { is_expected.not_to be_able_to(:accept, own_request) }
     it { is_expected.not_to be_able_to(:create, DriverLocation) }
   end
@@ -30,6 +32,8 @@ RSpec.describe Ability, type: :model do
     it { is_expected.to be_able_to(:read, rejected_request) }
     it { is_expected.to be_able_to(:accept, assigned_request) }
     it { is_expected.to be_able_to(:reject, assigned_request) }
+    it { is_expected.to be_able_to(:pick_up, assigned_request) }
+    it { is_expected.to be_able_to(:deliver, assigned_request) }
     it { is_expected.to be_able_to(:create, DriverLocation) }
     it { is_expected.not_to be_able_to(:read, other_request) }
     it { is_expected.not_to be_able_to(:create, DeliveryRequest) }

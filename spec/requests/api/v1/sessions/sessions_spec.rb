@@ -36,7 +36,7 @@ RSpec.describe "Api::V1::Sessions", type: :request do
       post "/api/v1/login", params: { login: { username: user.email, password: "password123" } }
       token = JSON.parse(response.body).dig("data", "token")
 
-      get "/api/v1/delivery_requests", headers: { "Authorization" => "Bearer #{token}" }
+      get "/api/v1/customer/delivery_requests", headers: { "Authorization" => "Bearer #{token}" }
 
       expect(response).to have_http_status(:ok)
     end

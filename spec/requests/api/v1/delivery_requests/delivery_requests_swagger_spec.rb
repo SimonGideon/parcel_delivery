@@ -85,86 +85,119 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
     }
   end
 
-  path "/api/v1/delivery_requests" do
-    get "Lists delivery requests visible to the authenticated principal" do
+  delivery_request_list_meta_schema = {
+    type: :object,
+    properties: {
+      current_page: { type: :integer, example: 1 },
+      next_page: { type: :integer, nullable: true },
+      prev_page: { type: :integer, nullable: true },
+      total_pages: { type: :integer, example: 1 },
+      total_count: { type: :integer, example: 1 },
+      filters: {
+        type: :object,
+        properties: {
+          allowed_statuses: {
+            type: :array,
+            items: { type: :string },
+            example: %w[finding_driver assigned accepted picked_up in_transit delivered cancelled]
+          }
+        }
+      }
+    }
+  }.freeze
+
+  delivery_request_list_schema = {
+    type: :object,
+    properties: {
+      success: { type: :boolean, example: true },
+      message: { type: :string, example: "Delivery requests retrieved successfully" },
+      data: { type: :array, items: delivery_request_schema },
+      meta: delivery_request_list_meta_schema
+    },
+    required: %w[success message data meta]
+  }.freeze
+
+  shared_list_query_parameters = lambda do
+    parameter name: :status, in: :query, type: :string, required: false,
+      description: <<~DESC.squish
+        Filter by lifecycle status. Allowed values are role-specific and are
+        returned in meta.filters.allowed_statuses. Customer tokens may filter
+        all lifecycle statuses; driver tokens may filter only driver-visible
+        statuses.
+      DESC
+    parameter name: :driver_id, in: :query, type: :string, format: :uuid, required: false,
+      description: "Filter visible requests by assigned driver id"
+    parameter name: :created_from, in: :query, type: :string, format: "date-time", required: false,
+      description: "Filter requests created at or after this ISO8601 timestamp"
+    parameter name: :created_to, in: :query, type: :string, format: "date-time", required: false,
+      description: "Filter requests created at or before this ISO8601 timestamp"
+    parameter name: :q, in: :query, type: :string, required: false,
+      description: "Search package_description plus pickup/delivery city, nearest_town, and line1"
+    parameter name: :sort_by, in: :query, type: :string, required: false,
+      enum: %w[created_at updated_at status package_weight],
+      description: "Sort field. Defaults to created_at"
+    parameter name: :sort_direction, in: :query, type: :string, required: false,
+      enum: %w[asc desc],
+      description: "Sort direction. Defaults to desc"
+    parameter name: :page, in: :query, type: :integer, required: false,
+      description: "Page number, starting at 1"
+    parameter name: :per_page, in: :query, type: :integer, required: false,
+      description: "Items per page, 1-100. Defaults to 25"
+  end
+
+  path "/api/v1/customer/delivery_requests" do
+    get "Lists the authenticated customer's delivery requests" do
       tags "Delivery Requests"
       produces "application/json"
       security [{ bearer_auth: [] }]
-      description <<~DESC
-        Customers receive their own delivery requests. Drivers receive their
-        assigned/current requests plus request history they already acted on,
-        including requests they rejected and sent back for reassignment.
-      DESC
+      description "Customer-only list endpoint. Driver tokens are rejected."
 
-      parameter name: :status, in: :query, type: :string, required: false,
-        description: <<~DESC.squish
-          Filter by lifecycle status. Allowed values are role-specific and are
-          returned in meta.filters.allowed_statuses. Customer tokens may filter
-          all lifecycle statuses; driver tokens may filter only driver-visible
-          statuses.
-        DESC
-      parameter name: :driver_id, in: :query, type: :string, format: :uuid, required: false,
-        description: "Filter visible requests by assigned driver id"
-      parameter name: :created_from, in: :query, type: :string, format: "date-time", required: false,
-        description: "Filter requests created at or after this ISO8601 timestamp"
-      parameter name: :created_to, in: :query, type: :string, format: "date-time", required: false,
-        description: "Filter requests created at or before this ISO8601 timestamp"
-      parameter name: :q, in: :query, type: :string, required: false,
-        description: "Search package_description plus pickup/delivery city, nearest_town, and line1"
-      parameter name: :sort_by, in: :query, type: :string, required: false,
-        enum: %w[created_at updated_at status package_weight],
-        description: "Sort field. Defaults to created_at"
-      parameter name: :sort_direction, in: :query, type: :string, required: false,
-        enum: %w[asc desc],
-        description: "Sort direction. Defaults to desc"
-      parameter name: :page, in: :query, type: :integer, required: false,
-        description: "Page number, starting at 1"
-      parameter name: :per_page, in: :query, type: :integer, required: false,
-        description: "Items per page, 1-100. Defaults to 25"
+      instance_exec(&shared_list_query_parameters)
 
-      response "200", "requests returned" do
-        schema type: :object,
-               properties: {
-                 success: { type: :boolean, example: true },
-                 message: { type: :string, example: "Delivery requests retrieved successfully" },
-                 data: { type: :array, items: delivery_request_schema },
-                 meta: {
-                   type: :object,
-                   properties: {
-                     current_page: { type: :integer, example: 1 },
-                     next_page: { type: :integer, nullable: true },
-                     prev_page: { type: :integer, nullable: true },
-                     total_pages: { type: :integer, example: 1 },
-                     total_count: { type: :integer, example: 1 },
-                     filters: {
-                       type: :object,
-                       properties: {
-                         allowed_statuses: {
-                           type: :array,
-                           items: { type: :string },
-                           example: %w[finding_driver assigned accepted picked_up in_transit delivered cancelled]
-                         }
-                       }
-                     }
-                   }
-                 }
-               },
-               required: %w[success message data meta]
+      response "200", "customer requests returned" do
+        schema delivery_request_list_schema
 
         let(:Authorization) { user_auth }
         before { create(:delivery_request, user: user) }
         run_test!
       end
 
-      response "400", "unknown or unauthorized status filter" do
-        schema error_envelope.call("Invalid status filter: pending. Allowed statuses: finding_driver, assigned, accepted, picked_up, in_transit, delivered, cancelled")
+      response "401", "driver token is not accepted" do
+        schema error_envelope.call("Invalid credentials for this endpoint")
 
         let(:Authorization) { driver_auth }
-        let(:status) { "pending" }
         run_test!
       end
     end
+  end
 
+  path "/api/v1/driver/delivery_requests" do
+    get "Lists the authenticated driver's request queue and history" do
+      tags "Delivery Requests"
+      produces "application/json"
+      security [{ bearer_auth: [] }]
+      description "Driver-only list endpoint. Customer tokens are rejected."
+
+      instance_exec(&shared_list_query_parameters)
+
+      response "200", "driver requests returned" do
+        schema delivery_request_list_schema
+
+        let(:Authorization) { driver_auth }
+        before { create(:delivery_request, driver: driver, status: :assigned) }
+        run_test!
+      end
+
+      response "401", "customer token is not accepted" do
+        schema error_envelope.call("Invalid credentials for this endpoint")
+
+        let(:Authorization) { user_auth }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/delivery_requests" do
     post "Creates a delivery request and triggers nearest-driver search" do
       tags "Delivery Requests"
       consumes "application/json"
@@ -322,6 +355,33 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
     end
   end
 
+  path "/api/v1/delivery_requests/{id}/cancel" do
+    post "Customer cancels a delivery request before pickup" do
+      tags "Delivery Requests"
+      produces "application/json"
+      security [{ bearer_auth: [] }]
+      description "Customer-only action. Requests can be cancelled while pending, finding_driver, assigned, or accepted."
+
+      parameter name: :id, in: :path, type: :string, format: :uuid
+
+      response "200", "request cancelled" do
+        schema success_envelope.call("Delivery request cancelled", delivery_request_schema)
+
+        let(:Authorization) { user_auth }
+        let(:id) { create(:delivery_request, user: user, status: :assigned, driver: driver).id }
+        run_test!
+      end
+
+      response "409", "request has already been picked up" do
+        schema error_envelope.call("Delivery request cannot be cancelled from status 'picked_up'")
+
+        let(:Authorization) { user_auth }
+        let(:id) { create(:delivery_request, user: user, status: :picked_up, driver: driver).id }
+        run_test!
+      end
+    end
+  end
+
   path "/api/v1/delivery_requests/{id}/accept" do
     post "Driver accepts an assigned delivery request" do
       tags "Delivery Requests"
@@ -340,6 +400,58 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
 
       response "409", "request is not in assigned status" do
         schema error_envelope.call("Delivery request cannot be accepted from status 'accepted'")
+
+        let(:Authorization) { driver_auth }
+        let(:id) { create(:delivery_request, driver: driver, status: :accepted).id }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/delivery_requests/{id}/pick_up" do
+    post "Driver marks an accepted delivery request as picked up" do
+      tags "Delivery Requests"
+      produces "application/json"
+      security [{ bearer_auth: [] }]
+
+      parameter name: :id, in: :path, type: :string, format: :uuid
+
+      response "200", "request picked up" do
+        schema success_envelope.call("Delivery request picked up", delivery_request_schema)
+
+        let(:Authorization) { driver_auth }
+        let(:id) { create(:delivery_request, driver: driver, status: :accepted).id }
+        run_test!
+      end
+
+      response "409", "request has not been accepted" do
+        schema error_envelope.call("Delivery request cannot be picked up from status 'assigned'")
+
+        let(:Authorization) { driver_auth }
+        let(:id) { create(:delivery_request, driver: driver, status: :assigned).id }
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/delivery_requests/{id}/deliver" do
+    post "Driver marks a picked-up delivery request as delivered" do
+      tags "Delivery Requests"
+      produces "application/json"
+      security [{ bearer_auth: [] }]
+
+      parameter name: :id, in: :path, type: :string, format: :uuid
+
+      response "200", "request delivered" do
+        schema success_envelope.call("Delivery request delivered", delivery_request_schema)
+
+        let(:Authorization) { driver_auth }
+        let(:id) { create(:delivery_request, driver: driver, status: :picked_up).id }
+        run_test!
+      end
+
+      response "409", "request has not been picked up" do
+        schema error_envelope.call("Delivery request cannot be delivered from status 'accepted'")
 
         let(:Authorization) { driver_auth }
         let(:id) { create(:delivery_request, driver: driver, status: :accepted).id }

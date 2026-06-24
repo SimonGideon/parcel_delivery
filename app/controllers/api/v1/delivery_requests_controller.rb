@@ -1,10 +1,10 @@
 module Api
   module V1
     class DeliveryRequestsController < ApplicationController
-      before_action :authenticate_user!, only: %i[create]
-      before_action :authenticate_user_or_driver!, only: %i[index show]
-      before_action :authenticate_driver!, only: %i[accept reject]
-      before_action :set_delivery_request, only: %i[show accept reject]
+      before_action :authenticate_user!, only: %i[create customer_index cancel]
+      before_action :authenticate_user_or_driver!, only: %i[show]
+      before_action :authenticate_driver!, only: %i[driver_index accept reject pick_up deliver]
+      before_action :set_delivery_request, only: %i[show cancel accept reject pick_up deliver]
 
       SORT_COLUMNS = {
         "created_at" => "created_at",
@@ -19,27 +19,12 @@ module Api
       DEFAULT_PER_PAGE = 25
       MAX_PER_PAGE = 100
 
-      # Customers see their own requests. Drivers see their assigned/current
-      # requests plus historical requests they already acted on.
-      def index
-        return render_error(message: validation_error, status: :bad_request) if validation_error
+      def customer_index
+        render_delivery_requests
+      end
 
-        delivery_requests = visible_delivery_requests
-          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
-        delivery_requests = apply_filters(delivery_requests)
-        delivery_requests = apply_search(delivery_requests)
-        delivery_requests = delivery_requests
-          .order(sort_column => sort_direction)
-          .page(params[:page])
-          .per(per_page)
-
-        render_success(
-          data: delivery_requests.map { |dr| DeliveryRequestSerializer.new(dr).as_json },
-          message: "Delivery requests retrieved successfully",
-          meta: pagination_meta(delivery_requests).merge(
-            filters: { allowed_statuses: filterable_statuses }
-          )
-        )
+      def driver_index
+        render_delivery_requests
       end
 
       def show
@@ -76,6 +61,13 @@ module Api
         render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request accepted")
       end
 
+      def cancel
+        authorize! :cancel, @delivery_request
+
+        result = DeliveryRequests::Cancel.new(delivery_request: @delivery_request, user: current_user).call
+        render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request cancelled")
+      end
+
       def reject
         authorize! :reject, @delivery_request
 
@@ -83,7 +75,42 @@ module Api
         render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request rejected")
       end
 
+      def pick_up
+        authorize! :pick_up, @delivery_request
+
+        result = DeliveryRequests::PickUp.new(delivery_request: @delivery_request, driver: current_driver).call
+        render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request picked up")
+      end
+
+      def deliver
+        authorize! :deliver, @delivery_request
+
+        result = DeliveryRequests::Deliver.new(delivery_request: @delivery_request, driver: current_driver).call
+        render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request delivered")
+      end
+
       private
+
+      def render_delivery_requests
+        return render_error(message: validation_error, status: :bad_request) if validation_error
+
+        delivery_requests = visible_delivery_requests
+          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
+        delivery_requests = apply_filters(delivery_requests)
+        delivery_requests = apply_search(delivery_requests)
+        delivery_requests = delivery_requests
+          .order(sort_column => sort_direction)
+          .page(params[:page])
+          .per(per_page)
+
+        render_success(
+          data: delivery_requests.map { |dr| DeliveryRequestSerializer.new(dr).as_json },
+          message: "Delivery requests retrieved successfully",
+          meta: pagination_meta(delivery_requests).merge(
+            filters: { allowed_statuses: filterable_statuses }
+          )
+        )
+      end
 
       def visible_delivery_requests
         return DeliveryRequest.accessible_by(current_ability, :read) if current_user

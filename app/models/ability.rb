@@ -17,6 +17,7 @@ class Ability
   def user_abilities(user)
     can :create, DeliveryRequest
     can :read, DeliveryRequest, user_id: user.id
+    can :cancel, DeliveryRequest, user_id: user.id
   end
 
   def driver_abilities(driver)
@@ -26,6 +27,8 @@ class Ability
     end
     can :accept, DeliveryRequest, driver_id: driver.id
     can :reject, DeliveryRequest, driver_id: driver.id
+    can :pick_up, DeliveryRequest, driver_id: driver.id
+    can :deliver, DeliveryRequest, driver_id: driver.id
     can :create, DriverLocation
   end
 end

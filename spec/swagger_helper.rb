@@ -29,7 +29,7 @@ RSpec.configure do |config|
         },
         {
           name: 'Delivery Requests',
-          description: 'Create, view, accept, and reject parcel delivery requests.'
+          description: 'Create, view, list, cancel, accept, and reject parcel delivery requests.'
         },
         {
           name: 'Delivery Events',
