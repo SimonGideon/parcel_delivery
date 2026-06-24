@@ -1,6 +1,6 @@
 class CreateCountries < ActiveRecord::Migration[7.1]
   def change
-    create_table :countries do |t|
+    create_table :countries, id: :uuid, default: -> { "gen_random_uuid()" } do |t|
       t.string :name, null: false
       t.string :code
 

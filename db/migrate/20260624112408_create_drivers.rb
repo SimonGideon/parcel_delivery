@@ -1,6 +1,6 @@
 class CreateDrivers < ActiveRecord::Migration[7.1]
   def change
-    create_table :drivers do |t|
+    create_table :drivers, id: :uuid, default: -> { "gen_random_uuid()" } do |t|
       t.string :name, null: false
       t.string :email, null: false
       t.string :password_digest, null: false

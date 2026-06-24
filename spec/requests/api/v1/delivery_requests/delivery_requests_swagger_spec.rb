@@ -43,8 +43,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "123 Main St" },
                   city: { type: :string, example: "Nairobi" },
-                  county_id: { type: :integer, example: 1, nullable: true },
-                  country_id: { type: :integer, example: 1, nullable: true },
+                  county_id: { type: :string, format: :uuid, nullable: true },
+                  country_id: { type: :string, format: :uuid, nullable: true },
                   nearest_town: { type: :string, example: "Near Total Petrol Station, Ruiru" },
                   building_name: { type: :string, example: "ABC Place", nullable: true },
                   floor: { type: :string, example: "3rd floor", nullable: true },
@@ -60,8 +60,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "456 Side St" },
                   city: { type: :string, example: "Nairobi" },
-                  county_id: { type: :integer, example: 1, nullable: true },
-                  country_id: { type: :integer, example: 1, nullable: true },
+                  county_id: { type: :string, format: :uuid, nullable: true },
+                  country_id: { type: :string, format: :uuid, nullable: true },
                   nearest_town: { type: :string, example: "Near Garden City Mall" },
                   building_name: { type: :string, example: "ABC Place", nullable: true },
                   floor: { type: :string, example: "3rd floor", nullable: true },
@@ -102,7 +102,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       security [{ basic_auth: [] }]
 
       parameter name: :Authorization, in: :header, type: :string, required: true
-      parameter name: :id, in: :path, type: :integer
+      parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "delivery request found" do
         let(:Authorization) { user_auth }
@@ -125,7 +125,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       security [{ basic_auth: [] }]
 
       parameter name: :Authorization, in: :header, type: :string, required: true
-      parameter name: :id, in: :path, type: :integer
+      parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request accepted" do
         let(:Authorization) { driver_auth }
@@ -148,7 +148,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       security [{ basic_auth: [] }]
 
       parameter name: :Authorization, in: :header, type: :string, required: true
-      parameter name: :id, in: :path, type: :integer
+      parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request rejected" do
         let(:Authorization) { driver_auth }

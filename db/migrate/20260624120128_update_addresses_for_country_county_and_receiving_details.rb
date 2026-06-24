@@ -5,8 +5,8 @@ class UpdateAddressesForCountryCountyAndReceivingDetails < ActiveRecord::Migrati
     remove_column :addresses, :country, :string
     remove_column :addresses, :county, :string
 
-    add_reference :addresses, :country, foreign_key: true
-    add_reference :addresses, :county, foreign_key: true
+    add_reference :addresses, :country, foreign_key: true, type: :uuid
+    add_reference :addresses, :county, foreign_key: true, type: :uuid
 
     # Optional details for whoever is physically receiving the delivery.
     add_column :addresses, :building_name, :string

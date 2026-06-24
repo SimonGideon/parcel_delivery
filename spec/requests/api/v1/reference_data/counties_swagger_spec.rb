@@ -6,7 +6,7 @@ RSpec.describe "api/v1/counties", type: :request do
       tags "Reference Data"
       produces "application/json"
 
-      parameter name: :country_id, in: :query, type: :integer, required: false
+      parameter name: :country_id, in: :query, type: :string, format: :uuid, required: false
 
       response "200", "counties returned" do
         let(:country_id) { create(:country, name: "Kenya").id }

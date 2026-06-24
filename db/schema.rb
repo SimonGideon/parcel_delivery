@@ -12,9 +12,10 @@
 
 ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
-  create_table "addresses", force: :cascade do |t|
+  create_table "addresses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "line1", null: false
     t.string "line2"
     t.string "city", null: false
@@ -24,8 +25,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "nearest_town"
-    t.bigint "country_id"
-    t.bigint "county_id"
+    t.uuid "country_id"
+    t.uuid "county_id"
     t.string "building_name"
     t.string "floor"
     t.string "door"
@@ -34,16 +35,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["county_id"], name: "index_addresses_on_county_id"
   end
 
-  create_table "counties", force: :cascade do |t|
+  create_table "counties", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
-    t.bigint "country_id", null: false
+    t.uuid "country_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["country_id", "name"], name: "index_counties_on_country_id_and_name", unique: true
     t.index ["country_id"], name: "index_counties_on_country_id"
   end
 
-  create_table "countries", force: :cascade do |t|
+  create_table "countries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
     t.string "code"
     t.datetime "created_at", null: false
@@ -51,8 +52,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["name"], name: "index_countries_on_name", unique: true
   end
 
-  create_table "delivery_events", force: :cascade do |t|
-    t.bigint "delivery_request_id", null: false
+  create_table "delivery_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "delivery_request_id", null: false
     t.integer "event_type", null: false
     t.jsonb "metadata", default: {}, null: false
     t.datetime "occurred_at", null: false
@@ -62,11 +63,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["event_type"], name: "index_delivery_events_on_event_type"
   end
 
-  create_table "delivery_requests", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "driver_id"
-    t.bigint "pickup_address_id", null: false
-    t.bigint "delivery_address_id", null: false
+  create_table "delivery_requests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.uuid "driver_id"
+    t.uuid "pickup_address_id", null: false
+    t.uuid "delivery_address_id", null: false
     t.string "package_description", null: false
     t.decimal "package_weight", precision: 8, scale: 2, null: false
     t.integer "status", default: 0, null: false
@@ -79,8 +80,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["user_id"], name: "index_delivery_requests_on_user_id"
   end
 
-  create_table "driver_locations", force: :cascade do |t|
-    t.bigint "driver_id", null: false
+  create_table "driver_locations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "driver_id", null: false
     t.decimal "latitude", precision: 10, scale: 6, null: false
     t.decimal "longitude", precision: 10, scale: 6, null: false
     t.datetime "recorded_at", null: false
@@ -90,7 +91,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["driver_id"], name: "index_driver_locations_on_driver_id"
   end
 
-  create_table "drivers", force: :cascade do |t|
+  create_table "drivers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
     t.string "email", null: false
     t.string "password_digest", null: false
@@ -102,7 +103,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
     t.index ["status"], name: "index_drivers_on_status"
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
     t.string "email", null: false
     t.string "password_digest", null: false

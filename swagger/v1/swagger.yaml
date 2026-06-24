@@ -19,9 +19,10 @@ paths:
           type: string
       - name: delivery_request_id
         in: path
+        format: uuid
         required: true
         schema:
-          type: integer
+          type: string
       responses:
         '200':
           description: event history returned
@@ -91,12 +92,12 @@ paths:
                           type: string
                           example: Nairobi
                         county_id:
-                          type: integer
-                          example: 1
+                          type: string
+                          format: uuid
                           nullable: true
                         country_id:
-                          type: integer
-                          example: 1
+                          type: string
+                          format: uuid
                           nullable: true
                         nearest_town:
                           type: string
@@ -138,12 +139,12 @@ paths:
                           type: string
                           example: Nairobi
                         county_id:
-                          type: integer
-                          example: 1
+                          type: string
+                          format: uuid
                           nullable: true
                         country_id:
-                          type: integer
-                          example: 1
+                          type: string
+                          format: uuid
                           nullable: true
                         nearest_town:
                           type: string
@@ -195,9 +196,10 @@ paths:
           type: string
       - name: id
         in: path
+        format: uuid
         required: true
         schema:
-          type: integer
+          type: string
       responses:
         '200':
           description: delivery request found
@@ -218,9 +220,10 @@ paths:
           type: string
       - name: id
         in: path
+        format: uuid
         required: true
         schema:
-          type: integer
+          type: string
       responses:
         '200':
           description: request accepted
@@ -241,9 +244,10 @@ paths:
           type: string
       - name: id
         in: path
+        format: uuid
         required: true
         schema:
-          type: integer
+          type: string
       responses:
         '200':
           description: request rejected
@@ -353,9 +357,10 @@ paths:
       parameters:
       - name: country_id
         in: query
+        format: uuid
         required: false
         schema:
-          type: integer
+          type: string
       responses:
         '200':
           description: counties returned

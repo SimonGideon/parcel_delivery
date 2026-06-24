@@ -1,7 +1,7 @@
 class CreateDriverLocations < ActiveRecord::Migration[7.1]
   def change
-    create_table :driver_locations do |t|
-      t.references :driver, null: false, foreign_key: true
+    create_table :driver_locations, id: :uuid, default: -> { "gen_random_uuid()" } do |t|
+      t.references :driver, null: false, foreign_key: true, type: :uuid
       t.decimal :latitude, precision: 10, scale: 6, null: false
       t.decimal :longitude, precision: 10, scale: 6, null: false
       t.datetime :recorded_at, null: false

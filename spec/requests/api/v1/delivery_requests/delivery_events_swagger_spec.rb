@@ -10,7 +10,7 @@ RSpec.describe "api/v1/delivery_requests/events", type: :request do
       security [{ basic_auth: [] }]
 
       parameter name: :Authorization, in: :header, type: :string, required: true
-      parameter name: :delivery_request_id, in: :path, type: :integer
+      parameter name: :delivery_request_id, in: :path, type: :string, format: :uuid
 
       response "200", "event history returned" do
         let(:Authorization) { ActionController::HttpAuthentication::Basic.encode_credentials(user.email, "password123") }
