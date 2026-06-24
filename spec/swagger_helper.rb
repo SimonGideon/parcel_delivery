@@ -26,7 +26,16 @@ RSpec.configure do |config|
         {
           url: '/'
         }
-      ]
+      ],
+      components: {
+        securitySchemes: {
+          basic_auth: {
+            type: :http,
+            scheme: :basic,
+            description: 'Email and password for either a customer (User) or a Driver, depending on the endpoint.'
+          }
+        }
+      }
     }
   }
 
