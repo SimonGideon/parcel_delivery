@@ -1,6 +1,13 @@
 # Parcel Delivery Backend
 
+![Live API](https://img.shields.io/badge/LIVE-API-2ea44f?style=for-the-badge&logo=render&logoColor=white)
+
 Rails API for parcel delivery. Customers create delivery requests, drivers accept or reject jobs, and every status change is saved as an audit event.
+
+## Live Demo
+
+- 🔴 API Docs: `https://percel-delivery.simongideon.me/api/docs` 👉 [click here](https://percel-delivery.simongideon.me/api/docs)
+- 🟢 Health Check: `https://percel-delivery.simongideon.me/api/v1/health` 👉 [click here](https://percel-delivery.simongideon.me/api/v1/health)
 
 ## Stack
 
