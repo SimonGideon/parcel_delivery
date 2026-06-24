@@ -20,7 +20,7 @@ RSpec.describe "Api::V1::Countries", type: :request do
 
       kenya = JSON.parse(response.body)["data"].first
       expect(kenya).to include(
-        "iso2" => "KE", "iso3" => "KEN", "phonecode" => "254", "capital" => "Nairobi",
+        "iso2" => "KE", "iso3" => "KEN", "phonecode" => "+254", "capital" => "Nairobi",
         "currency" => "KES", "currency_symbol" => "KSh", "region" => "Africa"
       )
       expect(kenya["latitude"]).to eq(1.0)

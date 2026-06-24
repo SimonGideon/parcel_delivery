@@ -9,7 +9,7 @@ FactoryBot.define do
       name { "Kenya" }
       iso2 { "KE" }
       iso3 { "KEN" }
-      phonecode { "254" }
+      phonecode { "+254" }
       capital { "Nairobi" }
       currency { "KES" }
       currency_symbol { "KSh" }

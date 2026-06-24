@@ -6,21 +6,21 @@
 # dataset -- enough for address/phone formatting without the columns nothing
 # here uses yet (timezones, translations, population, etc).
 EAST_AFRICAN_COUNTRIES = [
-  { name: "Kenya", iso2: "KE", iso3: "KEN", phonecode: "254", capital: "Nairobi",
+  { name: "Kenya", iso2: "KE", iso3: "KEN", phonecode: "+254", capital: "Nairobi",
     currency: "KES", currency_symbol: "KSh", region: "Africa", latitude: 1.0, longitude: 38.0 },
-  { name: "Uganda", iso2: "UG", iso3: "UGA", phonecode: "256", capital: "Kampala",
+  { name: "Uganda", iso2: "UG", iso3: "UGA", phonecode: "+256", capital: "Kampala",
     currency: "UGX", currency_symbol: "USh", region: "Africa", latitude: 1.0, longitude: 32.0 },
-  { name: "Tanzania", iso2: "TZ", iso3: "TZA", phonecode: "255", capital: "Dodoma",
+  { name: "Tanzania", iso2: "TZ", iso3: "TZA", phonecode: "+255", capital: "Dodoma",
     currency: "TZS", currency_symbol: "TSh", region: "Africa", latitude: -6.0, longitude: 35.0 },
-  { name: "Rwanda", iso2: "RW", iso3: "RWA", phonecode: "250", capital: "Kigali",
+  { name: "Rwanda", iso2: "RW", iso3: "RWA", phonecode: "+250", capital: "Kigali",
     currency: "RWF", currency_symbol: "FRw", region: "Africa", latitude: -2.0, longitude: 30.0 },
-  { name: "Burundi", iso2: "BI", iso3: "BDI", phonecode: "257", capital: "Bujumbura",
+  { name: "Burundi", iso2: "BI", iso3: "BDI", phonecode: "+257", capital: "Bujumbura",
     currency: "BIF", currency_symbol: "FBu", region: "Africa", latitude: -3.5, longitude: 30.0 },
-  { name: "South Sudan", iso2: "SS", iso3: "SSD", phonecode: "211", capital: "Juba",
+  { name: "South Sudan", iso2: "SS", iso3: "SSD", phonecode: "+211", capital: "Juba",
     currency: "SSP", currency_symbol: "£", region: "Africa", latitude: 7.0, longitude: 30.0 },
-  { name: "Ethiopia", iso2: "ET", iso3: "ETH", phonecode: "251", capital: "Addis Ababa",
+  { name: "Ethiopia", iso2: "ET", iso3: "ETH", phonecode: "+251", capital: "Addis Ababa",
     currency: "ETB", currency_symbol: "Br", region: "Africa", latitude: 8.0, longitude: 38.0 },
-  { name: "Somalia", iso2: "SO", iso3: "SOM", phonecode: "252", capital: "Mogadishu",
+  { name: "Somalia", iso2: "SO", iso3: "SOM", phonecode: "+252", capital: "Mogadishu",
     currency: "SOS", currency_symbol: "Sh.So.", region: "Africa", latitude: 10.0, longitude: 49.0 }
 ].freeze
 
