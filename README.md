@@ -23,6 +23,8 @@ Rails API for parcel delivery. Customers create delivery requests, drivers accep
 ## Setup
 
 ```bash
+git clone https://github.com/SimonGideon/parcel_delivery.git
+cd parcel_delivery
 bundle install
 bin/rails db:create db:migrate db:seed
 bin/rails server
