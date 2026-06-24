@@ -9,7 +9,6 @@ RSpec.describe "api/v1/delivery_requests/events", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :delivery_request_id, in: :path, type: :string, format: :uuid
 
       response "200", "event history returned" do

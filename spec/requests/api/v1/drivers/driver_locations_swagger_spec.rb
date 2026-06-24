@@ -8,7 +8,6 @@ RSpec.describe "api/v1/driver_locations", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :driver_location, in: :body, schema: {
         type: :object,
         properties: {

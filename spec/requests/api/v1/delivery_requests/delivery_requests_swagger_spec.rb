@@ -12,7 +12,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :page, in: :query, type: :integer, required: false
       parameter name: :per_page, in: :query, type: :integer, required: false
 
@@ -29,7 +28,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :delivery_request, in: :body, schema: {
         type: :object,
         properties: {
@@ -101,7 +99,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "delivery request found" do
@@ -124,7 +121,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request accepted" do
@@ -147,7 +143,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ basic_auth: [] }]
 
-      parameter name: :Authorization, in: :header, type: :string, required: true
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request rejected" do

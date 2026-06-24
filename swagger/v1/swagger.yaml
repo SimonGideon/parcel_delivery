@@ -12,11 +12,6 @@ paths:
       security:
       - basic_auth: []
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
       - name: delivery_request_id
         in: path
         format: uuid
@@ -34,11 +29,6 @@ paths:
       security:
       - basic_auth: []
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
       - name: page
         in: query
         required: false
@@ -58,12 +48,7 @@ paths:
       - Delivery Requests
       security:
       - basic_auth: []
-      parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
+      parameters: []
       responses:
         '201':
           description: delivery request created
@@ -189,11 +174,6 @@ paths:
       security:
       - basic_auth: []
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         format: uuid
@@ -213,11 +193,6 @@ paths:
       security:
       - basic_auth: []
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         format: uuid
@@ -237,11 +212,6 @@ paths:
       security:
       - basic_auth: []
       parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         format: uuid
@@ -258,12 +228,7 @@ paths:
       - Driver Locations
       security:
       - basic_auth: []
-      parameters:
-      - name: Authorization
-        in: header
-        required: true
-        schema:
-          type: string
+      parameters: []
       responses:
         '201':
           description: location recorded
