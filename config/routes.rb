@@ -10,6 +10,17 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get "health", to: "health#show"
+
+      resources :users, only: %i[create]
+      resources :drivers, only: %i[create]
+      resources :driver_locations, only: %i[create]
+
+      resources :delivery_requests, only: %i[index show create] do
+        post :accept, on: :member
+        post :reject, on: :member
+
+        resources :events, only: %i[index], controller: "delivery_events"
+      end
     end
   end
 

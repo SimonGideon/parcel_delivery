@@ -24,6 +24,22 @@ module Authenticatable
     render_unauthorized unless @current_driver
   end
 
+  # Some endpoints (viewing a delivery request, its event history) are
+  # readable by either the customer who owns it or the driver assigned to
+  # it. HTTP Basic carries one credential pair, so try both principal tables.
+  def authenticate_user_or_driver!
+    authenticate_with_http_basic do |email, password|
+      email = email.to_s.downcase
+      user = User.find_by(email: email)
+      next true if user&.authenticate(password) && (@current_user = user)
+
+      driver = Driver.find_by(email: email)
+      driver&.authenticate(password) && (@current_driver = driver)
+    end
+
+    render_unauthorized unless @current_user || @current_driver
+  end
+
   def current_user
     @current_user
   end
