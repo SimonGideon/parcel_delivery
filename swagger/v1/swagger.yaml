@@ -90,12 +90,33 @@ paths:
                         city:
                           type: string
                           example: Nairobi
-                        county:
-                          type: string
-                          example: Nairobi
+                        county_id:
+                          type: integer
+                          example: 1
+                          nullable: true
+                        country_id:
+                          type: integer
+                          example: 1
+                          nullable: true
                         nearest_town:
                           type: string
                           example: Near Total Petrol Station, Ruiru
+                        building_name:
+                          type: string
+                          example: ABC Place
+                          nullable: true
+                        floor:
+                          type: string
+                          example: 3rd floor
+                          nullable: true
+                        door:
+                          type: string
+                          example: B12
+                          nullable: true
+                        instructions:
+                          type: string
+                          example: Call at the gate
+                          nullable: true
                         latitude:
                           type: number
                           example: 1.2945
@@ -116,12 +137,33 @@ paths:
                         city:
                           type: string
                           example: Nairobi
-                        county:
-                          type: string
-                          example: Nairobi
+                        county_id:
+                          type: integer
+                          example: 1
+                          nullable: true
+                        country_id:
+                          type: integer
+                          example: 1
+                          nullable: true
                         nearest_town:
                           type: string
                           example: Near Garden City Mall
+                        building_name:
+                          type: string
+                          example: ABC Place
+                          nullable: true
+                        floor:
+                          type: string
+                          example: 3rd floor
+                          nullable: true
+                        door:
+                          type: string
+                          example: B12
+                          nullable: true
+                        instructions:
+                          type: string
+                          example: Call at the gate
+                          nullable: true
                         latitude:
                           type: number
                           example: 1.3
@@ -302,6 +344,29 @@ paths:
                 - status
                 - database
                 - timestamp
+  "/api/v1/counties":
+    get:
+      summary: Lists counties (reference data for address forms), optionally filtered
+        by country
+      tags:
+      - Reference Data
+      parameters:
+      - name: country_id
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: counties returned
+  "/api/v1/countries":
+    get:
+      summary: Lists countries (reference data for address forms)
+      tags:
+      - Reference Data
+      responses:
+        '200':
+          description: countries returned
   "/api/v1/users":
     post:
       summary: Registers a customer account
