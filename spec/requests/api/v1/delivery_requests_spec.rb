@@ -40,6 +40,30 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "accepts county_id/country_id references and receiving-details fields" do
+      kenya = create(:country, name: "Kenya")
+      nairobi = create(:county, country: kenya, name: "Nairobi")
+      params[:delivery_request][:delivery_address].merge!(
+        county_id: nairobi.id,
+        country_id: kenya.id,
+        building_name: "ABC Place",
+        floor: "3rd floor",
+        door: "B12",
+        instructions: "Call at the gate"
+      )
+
+      post "/api/v1/delivery_requests", params: params, headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:created)
+      delivery_address = JSON.parse(response.body).dig("data", "delivery_address")
+      expect(delivery_address.dig("county", "name")).to eq("Nairobi")
+      expect(delivery_address.dig("country", "name")).to eq("Kenya")
+      expect(delivery_address["building_name"]).to eq("ABC Place")
+      expect(delivery_address["floor"]).to eq("3rd floor")
+      expect(delivery_address["door"]).to eq("B12")
+      expect(delivery_address["instructions"]).to eq("Call at the gate")
+    end
   end
 
   describe "GET /api/v1/delivery_requests" do

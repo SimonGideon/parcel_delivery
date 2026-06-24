@@ -14,6 +14,8 @@ Rails.application.routes.draw do
       resources :users, only: %i[create]
       resources :drivers, only: %i[create]
       resources :driver_locations, only: %i[create]
+      resources :countries, only: %i[index]
+      resources :counties, only: %i[index]
 
       resources :delivery_requests, only: %i[index show create] do
         post :accept, on: :member

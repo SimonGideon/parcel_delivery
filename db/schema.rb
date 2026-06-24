@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_24_115557) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_24_120128) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -18,14 +18,37 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_115557) do
     t.string "line1", null: false
     t.string "line2"
     t.string "city", null: false
-    t.string "county"
     t.string "postal_code"
-    t.string "country"
     t.decimal "latitude", precision: 10, scale: 6, null: false
     t.decimal "longitude", precision: 10, scale: 6, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "nearest_town"
+    t.bigint "country_id"
+    t.bigint "county_id"
+    t.string "building_name"
+    t.string "floor"
+    t.string "door"
+    t.text "instructions"
+    t.index ["country_id"], name: "index_addresses_on_country_id"
+    t.index ["county_id"], name: "index_addresses_on_county_id"
+  end
+
+  create_table "counties", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "country_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["country_id", "name"], name: "index_counties_on_country_id_and_name", unique: true
+    t.index ["country_id"], name: "index_counties_on_country_id"
+  end
+
+  create_table "countries", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_countries_on_name", unique: true
   end
 
   create_table "delivery_events", force: :cascade do |t|
@@ -89,6 +112,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_115557) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "addresses", "counties"
+  add_foreign_key "addresses", "countries"
+  add_foreign_key "counties", "countries"
   add_foreign_key "delivery_events", "delivery_requests"
   add_foreign_key "delivery_requests", "addresses", column: "delivery_address_id"
   add_foreign_key "delivery_requests", "addresses", column: "pickup_address_id"

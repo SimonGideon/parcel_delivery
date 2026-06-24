@@ -27,4 +27,29 @@ RSpec.describe Address, type: :model do
       expect(address.coordinates).to eq([1.5, 36.5])
     end
   end
+
+  it "does not require a country or county" do
+    expect(build(:address, country: nil, county: nil)).to be_valid
+  end
+
+  it "allows the optional receiving-details fields to be blank" do
+    address = build(:address, building_name: nil, floor: nil, door: nil, instructions: nil)
+    expect(address).to be_valid
+  end
+
+  it "accepts receiving-details for whoever is physically receiving the delivery" do
+    address = build(:address, building_name: "ABC Place", floor: "3rd floor", door: "B12", instructions: "Call at the gate")
+    expect(address).to be_valid
+  end
+
+  it "rejects a county that belongs to a different country than the selected country" do
+    kenya = create(:country, :kenya)
+    other_country = create(:country)
+    mismatched_county = create(:county, country: other_country)
+
+    address = build(:address, country: kenya, county: mismatched_county)
+
+    expect(address).not_to be_valid
+    expect(address.errors[:county]).to be_present
+  end
 end

@@ -13,7 +13,7 @@ module Api
       def index
         scope = current_user ? current_user.delivery_requests : current_driver.delivery_requests
         delivery_requests = scope
-          .includes(:user, :driver, :pickup_address, :delivery_address)
+          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
           .order(created_at: :desc)
           .page(params[:page])
           .per(params[:per_page] || 25)
@@ -57,7 +57,7 @@ module Api
 
       def set_delivery_request
         @delivery_request = DeliveryRequest
-          .includes(:user, :driver, :pickup_address, :delivery_address)
+          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
           .find(params[:id])
       end
 
@@ -66,7 +66,7 @@ module Api
       # rather than a 409 that would confirm it exists.
       def set_own_delivery_request_for_driver
         @delivery_request = current_driver.delivery_requests
-          .includes(:user, :driver, :pickup_address, :delivery_address)
+          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
           .find(params[:id])
       end
 
@@ -74,14 +74,17 @@ module Api
         params.require(:delivery_request).permit(:package_description, :package_weight)
       end
 
+      ADDRESS_PARAMS = %i[
+        line1 line2 city county_id nearest_town building_name floor door
+        instructions postal_code country_id latitude longitude
+      ].freeze
+
       def pickup_address_params
-        params.require(:delivery_request).require(:pickup_address)
-          .permit(:line1, :line2, :city, :county, :nearest_town, :postal_code, :country, :latitude, :longitude)
+        params.require(:delivery_request).require(:pickup_address).permit(ADDRESS_PARAMS)
       end
 
       def delivery_address_params
-        params.require(:delivery_request).require(:delivery_address)
-          .permit(:line1, :line2, :city, :county, :nearest_town, :postal_code, :country, :latitude, :longitude)
+        params.require(:delivery_request).require(:delivery_address).permit(ADDRESS_PARAMS)
       end
     end
   end

@@ -43,8 +43,13 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "123 Main St" },
                   city: { type: :string, example: "Nairobi" },
-                  county: { type: :string, example: "Nairobi" },
+                  county_id: { type: :integer, example: 1, nullable: true },
+                  country_id: { type: :integer, example: 1, nullable: true },
                   nearest_town: { type: :string, example: "Near Total Petrol Station, Ruiru" },
+                  building_name: { type: :string, example: "ABC Place", nullable: true },
+                  floor: { type: :string, example: "3rd floor", nullable: true },
+                  door: { type: :string, example: "B12", nullable: true },
+                  instructions: { type: :string, example: "Call at the gate", nullable: true },
                   latitude: { type: :number, example: 1.2945 },
                   longitude: { type: :number, example: 36.8228 }
                 },
@@ -55,8 +60,13 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
                 properties: {
                   line1: { type: :string, example: "456 Side St" },
                   city: { type: :string, example: "Nairobi" },
-                  county: { type: :string, example: "Nairobi" },
+                  county_id: { type: :integer, example: 1, nullable: true },
+                  country_id: { type: :integer, example: 1, nullable: true },
                   nearest_town: { type: :string, example: "Near Garden City Mall" },
+                  building_name: { type: :string, example: "ABC Place", nullable: true },
+                  floor: { type: :string, example: "3rd floor", nullable: true },
+                  door: { type: :string, example: "B12", nullable: true },
+                  instructions: { type: :string, example: "Call at the gate", nullable: true },
                   latitude: { type: :number, example: 1.3 },
                   longitude: { type: :number, example: 36.83 }
                 },
