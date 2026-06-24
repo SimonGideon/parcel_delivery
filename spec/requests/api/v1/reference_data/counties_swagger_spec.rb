@@ -7,6 +7,10 @@ RSpec.describe "api/v1/counties", type: :request do
       produces "application/json"
 
       parameter name: :country_id, in: :query, type: :string, format: :uuid, required: false
+      parameter name: :q, in: :query, type: :string, required: false,
+        description: "Search counties by name (case-insensitive, partial match)"
+      parameter name: :page, in: :query, type: :integer, required: false
+      parameter name: :per_page, in: :query, type: :integer, required: false
 
       response "200", "counties returned" do
         schema type: :object,
@@ -24,7 +28,16 @@ RSpec.describe "api/v1/counties", type: :request do
                      }
                    }
                  },
-                 meta: { type: :object, nullable: true, example: nil }
+                 meta: {
+                   type: :object,
+                   properties: {
+                     current_page: { type: :integer, example: 1 },
+                     next_page: { type: :integer, nullable: true },
+                     prev_page: { type: :integer, nullable: true },
+                     total_pages: { type: :integer, example: 1 },
+                     total_count: { type: :integer, example: 1 }
+                   }
+                 }
                },
                required: %w[success message data meta]
 

@@ -12,6 +12,7 @@ Rswag::Ui.configure do |c|
 
   # Keep Authorize credentials across Try-it-out requests and page reloads.
   c.config_object[:persistAuthorization] = true
+  c.config_object[:tagsSorter] = "none"
 
   # Add Basic Auth in case your API is private
   # c.basic_auth_enabled = true

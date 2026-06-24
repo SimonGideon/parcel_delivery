@@ -52,4 +52,18 @@ RSpec.describe Address, type: :model do
     expect(address).not_to be_valid
     expect(address.errors[:county]).to be_present
   end
+
+  it "rejects a county_id that does not refer to an existing county" do
+    address = build(:address, county_id: SecureRandom.uuid, country: nil)
+
+    expect(address).not_to be_valid
+    expect(address.errors[:county]).to include("must exist")
+  end
+
+  it "rejects a country_id that does not refer to an existing country" do
+    address = build(:address, country_id: SecureRandom.uuid, county: nil)
+
+    expect(address).not_to be_valid
+    expect(address.errors[:country]).to include("must exist")
+  end
 end

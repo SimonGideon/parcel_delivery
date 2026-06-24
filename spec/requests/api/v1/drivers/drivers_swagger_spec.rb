@@ -3,7 +3,7 @@ require "swagger_helper"
 RSpec.describe "api/v1/drivers", type: :request do
   path "/api/v1/drivers" do
     post "Registers a driver account" do
-      tags "Authentication"
+      tags "Authorization"
       consumes "application/json"
       produces "application/json"
 

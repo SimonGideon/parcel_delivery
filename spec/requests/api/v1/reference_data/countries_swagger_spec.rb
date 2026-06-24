@@ -6,6 +6,11 @@ RSpec.describe "api/v1/countries", type: :request do
       tags "Reference Data"
       produces "application/json"
 
+      parameter name: :q, in: :query, type: :string, required: false,
+        description: "Search countries by name (case-insensitive, partial match)"
+      parameter name: :page, in: :query, type: :integer, required: false
+      parameter name: :per_page, in: :query, type: :integer, required: false
+
       response "200", "countries returned" do
         schema type: :object,
                properties: {
@@ -32,7 +37,16 @@ RSpec.describe "api/v1/countries", type: :request do
                      }
                    }
                  },
-                 meta: { type: :object, nullable: true, example: nil }
+                 meta: {
+                   type: :object,
+                   properties: {
+                     current_page: { type: :integer, example: 1 },
+                     next_page: { type: :integer, nullable: true },
+                     prev_page: { type: :integer, nullable: true },
+                     total_pages: { type: :integer, example: 1 },
+                     total_count: { type: :integer, example: 1 }
+                   }
+                 }
                },
                required: %w[success message data meta]
 

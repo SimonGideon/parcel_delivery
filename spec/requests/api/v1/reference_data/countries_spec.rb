@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Countries", type: :request do
   describe "GET /api/v1/countries" do
-    it "lists countries without requiring authentication" do
+    it "lists countries without requiring authentication, paginated" do
       create(:country, name: "Kenya", iso2: "KE")
       create(:country, name: "Uganda", iso2: "UG")
 
@@ -13,7 +13,17 @@ RSpec.describe "Api::V1::Countries", type: :request do
       expect(body["success"]).to be true
       expect(body["message"]).to eq("Countries retrieved successfully")
       expect(body["data"].map { |c| c["name"] }).to eq(%w[Kenya Uganda])
-      expect(body["meta"]).to be_nil
+      expect(body["meta"]).to include("current_page", "total_pages", "total_count")
+    end
+
+    it "searches by name via ?q=" do
+      create(:country, name: "Kenya", iso2: "KE")
+      create(:country, name: "Uganda", iso2: "UG")
+
+      get "/api/v1/countries", params: { q: "ken" }
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |c| c["name"] }).to eq(["Kenya"])
     end
 
     it "includes the enriched reference fields" do

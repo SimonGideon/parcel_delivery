@@ -22,6 +22,32 @@ RSpec.configure do |config|
         version: 'v1'
       },
       paths: {},
+      tags: [
+        {
+          name: 'Authorization',
+          description: 'Register users and drivers, then log in to get a bearer token for protected endpoints.'
+        },
+        {
+          name: 'Delivery Requests',
+          description: 'Create, view, accept, and reject parcel delivery requests.'
+        },
+        {
+          name: 'Delivery Events',
+          description: 'View delivery request lifecycle history.'
+        },
+        {
+          name: 'Driver Locations',
+          description: 'Driver location reporting.'
+        },
+        {
+          name: 'Reference Data',
+          description: 'Countries and counties used by address forms.'
+        },
+        {
+          name: 'Health',
+          description: 'Service health checks.'
+        }
+      ],
       servers: [
         {
           url: '/'

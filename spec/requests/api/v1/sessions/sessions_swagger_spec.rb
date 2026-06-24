@@ -3,7 +3,7 @@ require "swagger_helper"
 RSpec.describe "api/v1/login", type: :request do
   path "/api/v1/login" do
     post "Logs in with username/password and returns a bearer token" do
-      tags "Authentication"
+      tags "Authorization"
       consumes "application/json"
       produces "application/json"
       description <<~DESC.squish

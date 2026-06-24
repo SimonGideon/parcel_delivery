@@ -74,6 +74,28 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       expect(delivery_address["door"]).to eq("B12")
       expect(delivery_address["instructions"]).to eq("Call at the gate")
     end
+
+    it "returns 422 (not a raw 500) for a county_id that does not exist" do
+      params[:delivery_request][:delivery_address][:county_id] = SecureRandom.uuid
+
+      post "/api/v1/delivery_requests", params: params, headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be false
+      expect(body["errors"]).to include("field" => "county", "message" => "must exist", "code" => "required")
+    end
+
+    it "returns 422 (not a raw 500) for a country_id that does not exist" do
+      params[:delivery_request][:pickup_address][:country_id] = SecureRandom.uuid
+
+      post "/api/v1/delivery_requests", params: params, headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be false
+      expect(body["errors"]).to include("field" => "country", "message" => "must exist", "code" => "required")
+    end
   end
 
   describe "GET /api/v1/delivery_requests" do
@@ -89,15 +111,17 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       expect(body["meta"]).to include("current_page", "total_pages", "total_count")
     end
 
-    it "returns only the authenticated driver's assigned requests" do
-      mine = create(:delivery_request, driver: driver, status: :assigned)
+    it "returns the authenticated driver's assigned requests and rejected request history" do
+      assigned = create(:delivery_request, driver: driver, status: :assigned)
+      rejected = create(:delivery_request, status: :finding_driver)
+      rejected.record_event!(:driver_rejected, driver_id: driver.id)
       create(:delivery_request) # unassigned
 
       get "/api/v1/delivery_requests", headers: basic_auth_headers(driver.email, "password123")
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
-      expect(body["data"].map { |d| d["id"] }).to eq([mine.id])
+      expect(body["data"].map { |d| d["id"] }).to contain_exactly(assigned.id, rejected.id)
     end
 
     it "returns assigned requests using a driver bearer token" do
@@ -109,6 +133,127 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
       expect(body["data"].map { |d| d["id"] }).to eq([mine.id])
+    end
+
+    it "filters by status via ?status=" do
+      pending_request = create(:delivery_request, user: user, status: :pending)
+      create(:delivery_request, user: user, status: :delivered)
+
+      get "/api/v1/delivery_requests", params: { status: "pending" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([pending_request.id])
+    end
+
+    it "returns 400 for an unknown status filter" do
+      get "/api/v1/delivery_requests", params: { status: "bogus" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:bad_request)
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be false
+    end
+
+    it "searches package_description via ?q=" do
+      match = create(:delivery_request, user: user, package_description: "Laptop charger")
+      create(:delivery_request, user: user, package_description: "Books")
+
+      get "/api/v1/delivery_requests", params: { q: "charger" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([match.id])
+    end
+
+    it "searches pickup and delivery address fields via ?q=" do
+      pickup_match = create(:delivery_request, user: user, pickup_address: create(:address, city: "Kisumu"))
+      delivery_match = create(:delivery_request, user: user, delivery_address: create(:address, line1: "Mombasa Road"))
+      create(:delivery_request, user: user, package_description: "Books")
+
+      get "/api/v1/delivery_requests", params: { q: "mombasa" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([delivery_match.id])
+
+      get "/api/v1/delivery_requests", params: { q: "kisumu" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([pickup_match.id])
+    end
+
+    it "filters by created_from and created_to" do
+      older = create(:delivery_request, user: user)
+      older.update_column(:created_at, 3.days.ago)
+      in_range = create(:delivery_request, user: user)
+      in_range.update_column(:created_at, 1.day.ago)
+      newer = create(:delivery_request, user: user)
+
+      get "/api/v1/delivery_requests",
+        params: {
+          created_from: 2.days.ago.iso8601,
+          created_to: 12.hours.ago.iso8601
+        },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([in_range.id])
+      expect(body["data"].map { |d| d["id"] }).not_to include(older.id, newer.id)
+    end
+
+    it "filters by driver_id within the authenticated user's visible requests" do
+      assigned_driver = create(:driver)
+      matching = create(:delivery_request, user: user, driver: assigned_driver, status: :assigned)
+      create(:delivery_request, user: user, driver: create(:driver), status: :assigned)
+
+      get "/api/v1/delivery_requests", params: { driver_id: assigned_driver.id },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([matching.id])
+    end
+
+    it "sorts by an allowed field and direction" do
+      light = create(:delivery_request, user: user, package_weight: 1.0)
+      heavy = create(:delivery_request, user: user, package_weight: 9.0)
+
+      get "/api/v1/delivery_requests",
+        params: { sort_by: "package_weight", sort_direction: "asc" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([light.id, heavy.id])
+    end
+
+    it "paginates with page and per_page" do
+      requests = create_list(:delivery_request, 3, user: user)
+      requests.each_with_index { |delivery_request, index| delivery_request.update_column(:created_at, index.hours.ago) }
+
+      get "/api/v1/delivery_requests", params: { page: 2, per_page: 2 },
+        headers: basic_auth_headers(user.email, "password123")
+
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([requests.third.id])
+      expect(body["meta"]).to include("current_page" => 2, "total_pages" => 2, "total_count" => 3)
+    end
+
+    it "returns 400 for invalid sorting and pagination params" do
+      get "/api/v1/delivery_requests", params: { sort_by: "user_id" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:bad_request)
+
+      get "/api/v1/delivery_requests", params: { sort_direction: "sideways" },
+        headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:bad_request)
+
+      get "/api/v1/delivery_requests", params: { per_page: 101 },
+        headers: basic_auth_headers(user.email, "password123")
+
+      expect(response).to have_http_status(:bad_request)
     end
   end
 
@@ -127,6 +272,15 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       get "/api/v1/delivery_requests/#{delivery_request.id}", headers: basic_auth_headers(other_user.email, "password123")
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "is visible to a driver who previously rejected it" do
+      rejected_request = create(:delivery_request, status: :finding_driver)
+      rejected_request.record_event!(:driver_rejected, driver_id: driver.id)
+
+      get "/api/v1/delivery_requests/#{rejected_request.id}", headers: basic_auth_headers(driver.email, "password123")
+
+      expect(response).to have_http_status(:ok)
     end
   end
 

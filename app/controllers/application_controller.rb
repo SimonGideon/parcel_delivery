@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
 
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_record_invalid
+  rescue_from ActiveRecord::InvalidForeignKey, with: :render_invalid_reference
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
   rescue_from DeliveryRequests::TransitionError, with: :render_conflict
   rescue_from CanCan::AccessDenied, with: :render_access_denied
@@ -33,6 +34,13 @@ class ApplicationController < ActionController::API
 
   def render_record_invalid(error)
     render_validation_errors(error.record)
+  end
+
+  # Safety net: a model should validate referenced ids exist before saving
+  # (see Address#county_must_exist), but if anything ever skips that, this
+  # stops a raw Postgres foreign key violation from leaking as a 500.
+  def render_invalid_reference(_error)
+    render_error(message: "One or more referenced records do not exist", status: :unprocessable_content)
   end
 
   def render_bad_request(error)

@@ -21,6 +21,9 @@ class Ability
 
   def driver_abilities(driver)
     can :read, DeliveryRequest, driver_id: driver.id
+    can :read, DeliveryRequest do |delivery_request|
+      delivery_request.delivery_events.driver_rejected.where("metadata ->> 'driver_id' = ?", driver.id).exists?
+    end
     can :accept, DeliveryRequest, driver_id: driver.id
     can :reject, DeliveryRequest, driver_id: driver.id
     can :create, DriverLocation

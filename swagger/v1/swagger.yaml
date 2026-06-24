@@ -18,6 +18,34 @@ paths:
         required: true
         schema:
           type: string
+      - name: event_type
+        in: query
+        required: false
+        enum:
+        - created
+        - finding_driver
+        - driver_assigned
+        - driver_accepted
+        - driver_rejected
+        - picked_up
+        - in_transit
+        - delivered
+        - cancelled
+        description: "Filter to one lifecycle event type:\n * `created` \n * `finding_driver`
+          \n * `driver_assigned` \n * `driver_accepted` \n * `driver_rejected` \n
+          * `picked_up` \n * `in_transit` \n * `delivered` \n * `cancelled` \n "
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
       responses:
         '200':
           description: event history returned
@@ -60,29 +88,136 @@ paths:
                           format: date-time
                   meta:
                     type: object
-                    nullable: true
-                    example:
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      next_page:
+                        type: integer
+                        nullable: true
+                      prev_page:
+                        type: integer
+                        nullable: true
+                      total_pages:
+                        type: integer
+                        example: 1
+                      total_count:
+                        type: integer
+                        example: 1
                 required:
                 - success
                 - message
                 - data
                 - meta
+        '400':
+          description: unknown event_type filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'Invalid event_type filter: bogus'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
   "/api/v1/delivery_requests":
     get:
-      summary: Lists the authenticated customer's or driver's delivery requests
+      summary: Lists delivery requests visible to the authenticated principal
       tags:
       - Delivery Requests
       security:
       - bearer_auth: []
+      description: |
+        Customers receive their own delivery requests. Drivers receive their
+        assigned/current requests plus request history they already acted on,
+        including requests they rejected and sent back for reassignment.
       parameters:
+      - name: status
+        in: query
+        required: false
+        enum:
+        - pending
+        - finding_driver
+        - assigned
+        - accepted
+        - picked_up
+        - in_transit
+        - delivered
+        - cancelled
+        description: "Filter by lifecycle status:\n * `pending` \n * `finding_driver`
+          \n * `assigned` \n * `accepted` \n * `picked_up` \n * `in_transit` \n *
+          `delivered` \n * `cancelled` \n "
+        schema:
+          type: string
+      - name: driver_id
+        in: query
+        format: uuid
+        required: false
+        description: Filter visible requests by assigned driver id
+        schema:
+          type: string
+      - name: created_from
+        in: query
+        format: date-time
+        required: false
+        description: Filter requests created at or after this ISO8601 timestamp
+        schema:
+          type: string
+      - name: created_to
+        in: query
+        format: date-time
+        required: false
+        description: Filter requests created at or before this ISO8601 timestamp
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        description: Search package_description plus pickup/delivery city, nearest_town,
+          and line1
+        schema:
+          type: string
+      - name: sort_by
+        in: query
+        required: false
+        enum:
+        - created_at
+        - updated_at
+        - status
+        - package_weight
+        description: Sort field. Defaults to created_at
+        schema:
+          type: string
+      - name: sort_direction
+        in: query
+        required: false
+        enum:
+        - asc
+        - desc
+        description: Sort direction. Defaults to desc
+        schema:
+          type: string
       - name: page
         in: query
         required: false
+        description: Page number, starting at 1
         schema:
           type: integer
       - name: per_page
         in: query
         required: false
+        description: Items per page, 1-100. Defaults to 25
         schema:
           type: integer
       responses:
@@ -301,6 +436,28 @@ paths:
                 - message
                 - data
                 - meta
+        '400':
+          description: unknown status filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: 'Invalid status filter: bogus'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
     post:
       summary: Creates a delivery request and triggers nearest-driver search
       tags:
@@ -512,6 +669,38 @@ paths:
                 - message
                 - data
                 - meta
+        '422':
+          description: validation failed (e.g. a county_id/country_id that does not
+            exist)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: county
+                        message:
+                          type: string
+                          example: must exist
+                        code:
+                          type: string
+                          example: required
+                required:
+                - success
+                - message
+                - errors
         '401':
           description: missing or invalid credentials
           content:
@@ -1429,7 +1618,7 @@ paths:
     post:
       summary: Registers a driver account
       tags:
-      - Authentication
+      - Authorization
       parameters: []
       responses:
         '201':
@@ -1576,6 +1765,22 @@ paths:
         required: false
         schema:
           type: string
+      - name: q
+        in: query
+        required: false
+        description: Search counties by name (case-insensitive, partial match)
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
       responses:
         '200':
           description: counties returned
@@ -1606,8 +1811,22 @@ paths:
                           format: uuid
                   meta:
                     type: object
-                    nullable: true
-                    example:
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      next_page:
+                        type: integer
+                        nullable: true
+                      prev_page:
+                        type: integer
+                        nullable: true
+                      total_pages:
+                        type: integer
+                        example: 1
+                      total_count:
+                        type: integer
+                        example: 1
                 required:
                 - success
                 - message
@@ -1618,6 +1837,23 @@ paths:
       summary: Lists countries (reference data for address forms)
       tags:
       - Reference Data
+      parameters:
+      - name: q
+        in: query
+        required: false
+        description: Search countries by name (case-insensitive, partial match)
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
       responses:
         '200':
           description: countries returned
@@ -1688,8 +1924,22 @@ paths:
                           example: 180
                   meta:
                     type: object
-                    nullable: true
-                    example:
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      next_page:
+                        type: integer
+                        nullable: true
+                      prev_page:
+                        type: integer
+                        nullable: true
+                      total_pages:
+                        type: integer
+                        example: 1
+                      total_count:
+                        type: integer
+                        example: 1
                 required:
                 - success
                 - message
@@ -1699,7 +1949,7 @@ paths:
     post:
       summary: Logs in with username/password and returns a bearer token
       tags:
-      - Authentication
+      - Authorization
       description: Enter your account email as username and your password. Copy the
         returned token into Swagger's Authorize dialog. Use principal_type when the
         same email exists for both a customer and a driver.
@@ -1816,7 +2066,7 @@ paths:
     post:
       summary: Registers a customer account
       tags:
-      - Authentication
+      - Authorization
       parameters: []
       responses:
         '201':
@@ -1917,6 +2167,20 @@ paths:
                   - name
                   - email
                   - password
+tags:
+- name: Authorization
+  description: Register users and drivers, then log in to get a bearer token for protected
+    endpoints.
+- name: Delivery Requests
+  description: Create, view, accept, and reject parcel delivery requests.
+- name: Delivery Events
+  description: View delivery request lifecycle history.
+- name: Driver Locations
+  description: Driver location reporting.
+- name: Reference Data
+  description: Countries and counties used by address forms.
+- name: Health
+  description: Service health checks.
 servers:
 - url: "/"
 components:

@@ -19,9 +19,15 @@ RSpec.describe Ability, type: :model do
   context "when the principal is a driver" do
     let(:principal) { create(:driver) }
     let(:assigned_request) { create(:delivery_request, driver: principal, status: :assigned) }
+    let(:rejected_request) do
+      create(:delivery_request, status: :finding_driver).tap do |delivery_request|
+        delivery_request.record_event!(:driver_rejected, driver_id: principal.id)
+      end
+    end
     let(:other_request) { create(:delivery_request) }
 
     it { is_expected.to be_able_to(:read, assigned_request) }
+    it { is_expected.to be_able_to(:read, rejected_request) }
     it { is_expected.to be_able_to(:accept, assigned_request) }
     it { is_expected.to be_able_to(:reject, assigned_request) }
     it { is_expected.to be_able_to(:create, DriverLocation) }

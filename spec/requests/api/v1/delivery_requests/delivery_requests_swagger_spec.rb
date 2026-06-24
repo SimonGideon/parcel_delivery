@@ -86,13 +86,37 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
   end
 
   path "/api/v1/delivery_requests" do
-    get "Lists the authenticated customer's or driver's delivery requests" do
+    get "Lists delivery requests visible to the authenticated principal" do
       tags "Delivery Requests"
       produces "application/json"
       security [{ bearer_auth: [] }]
+      description <<~DESC
+        Customers receive their own delivery requests. Drivers receive their
+        assigned/current requests plus request history they already acted on,
+        including requests they rejected and sent back for reassignment.
+      DESC
 
-      parameter name: :page, in: :query, type: :integer, required: false
-      parameter name: :per_page, in: :query, type: :integer, required: false
+      parameter name: :status, in: :query, type: :string, required: false,
+        enum: %w[pending finding_driver assigned accepted picked_up in_transit delivered cancelled],
+        description: "Filter by lifecycle status"
+      parameter name: :driver_id, in: :query, type: :string, format: :uuid, required: false,
+        description: "Filter visible requests by assigned driver id"
+      parameter name: :created_from, in: :query, type: :string, format: "date-time", required: false,
+        description: "Filter requests created at or after this ISO8601 timestamp"
+      parameter name: :created_to, in: :query, type: :string, format: "date-time", required: false,
+        description: "Filter requests created at or before this ISO8601 timestamp"
+      parameter name: :q, in: :query, type: :string, required: false,
+        description: "Search package_description plus pickup/delivery city, nearest_town, and line1"
+      parameter name: :sort_by, in: :query, type: :string, required: false,
+        enum: %w[created_at updated_at status package_weight],
+        description: "Sort field. Defaults to created_at"
+      parameter name: :sort_direction, in: :query, type: :string, required: false,
+        enum: %w[asc desc],
+        description: "Sort direction. Defaults to desc"
+      parameter name: :page, in: :query, type: :integer, required: false,
+        description: "Page number, starting at 1"
+      parameter name: :per_page, in: :query, type: :integer, required: false,
+        description: "Items per page, 1-100. Defaults to 25"
 
       response "200", "requests returned" do
         schema type: :object,
@@ -115,6 +139,14 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
 
         let(:Authorization) { user_auth }
         before { create(:delivery_request, user: user) }
+        run_test!
+      end
+
+      response "400", "unknown status filter" do
+        schema error_envelope.call("Invalid status filter: bogus")
+
+        let(:Authorization) { user_auth }
+        let(:status) { "bogus" }
         run_test!
       end
     end
@@ -189,6 +221,42 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
               package_weight: 2.5,
               pickup_address: { line1: "123 Main St", city: "Nairobi", latitude: 1.2945, longitude: 36.8228 },
               delivery_address: { line1: "456 Side St", city: "Nairobi", latitude: 1.3, longitude: 36.83 }
+            }
+          }
+        end
+        run_test!
+      end
+
+      response "422", "validation failed (e.g. a county_id/country_id that does not exist)" do
+        schema type: :object,
+               properties: {
+                 success: { type: :boolean, example: false },
+                 message: { type: :string, example: "Validation failed" },
+                 errors: {
+                   type: :array,
+                   items: {
+                     type: :object,
+                     properties: {
+                       field: { type: :string, example: "county" },
+                       message: { type: :string, example: "must exist" },
+                       code: { type: :string, example: "required" }
+                     }
+                   }
+                 }
+               },
+               required: %w[success message errors]
+
+        let(:Authorization) { user_auth }
+        let(:delivery_request) do
+          {
+            delivery_request: {
+              package_description: "Books",
+              package_weight: 2.5,
+              pickup_address: { line1: "123 Main St", city: "Nairobi", latitude: 1.2945, longitude: 36.8228 },
+              delivery_address: {
+                line1: "456 Side St", city: "Nairobi", latitude: 1.3, longitude: 36.83,
+                county_id: SecureRandom.uuid
+              }
             }
           }
         end
