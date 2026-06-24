@@ -6,6 +6,8 @@ module Api
       # A driver reports their own current position; there is no concept of
       # reporting another driver's location, so it's always current_driver.
       def create
+        authorize! :create, DriverLocation
+
         location = current_driver.driver_locations.create!(driver_location_params)
 
         render json: { data: DriverLocationSerializer.new(location).as_json }, status: :created

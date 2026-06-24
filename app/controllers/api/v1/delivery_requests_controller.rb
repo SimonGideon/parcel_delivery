@@ -1,18 +1,15 @@
 module Api
   module V1
     class DeliveryRequestsController < ApplicationController
-      include DeliveryRequestAuthorizable
-
       before_action :authenticate_user!, only: %i[create]
       before_action :authenticate_user_or_driver!, only: %i[index show]
       before_action :authenticate_driver!, only: %i[accept reject]
-      before_action :set_delivery_request, only: %i[show]
-      before_action :set_own_delivery_request_for_driver, only: %i[accept reject]
+      before_action :set_delivery_request, only: %i[show accept reject]
 
       # Customers see their own requests; drivers see requests assigned to them.
       def index
-        scope = current_user ? current_user.delivery_requests : current_driver.delivery_requests
-        delivery_requests = scope
+        delivery_requests = DeliveryRequest
+          .accessible_by(current_ability, :read)
           .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
           .order(created_at: :desc)
           .page(params[:page])
@@ -25,13 +22,14 @@ module Api
       end
 
       def show
-        authorize_delivery_request_access!(@delivery_request)
-        return if performed?
+        authorize! :read, @delivery_request
 
         render json: { data: DeliveryRequestSerializer.new(@delivery_request).as_json }
       end
 
       def create
+        authorize! :create, DeliveryRequest
+
         delivery_request = DeliveryRequests::Creator.new(
           user: current_user,
           pickup_address_attrs: pickup_address_params.to_h,
@@ -44,11 +42,15 @@ module Api
       end
 
       def accept
+        authorize! :accept, @delivery_request
+
         result = DeliveryRequests::Accept.new(delivery_request: @delivery_request, driver: current_driver).call
         render json: { data: DeliveryRequestSerializer.new(result).as_json }
       end
 
       def reject
+        authorize! :reject, @delivery_request
+
         result = DeliveryRequests::Reject.new(delivery_request: @delivery_request, driver: current_driver).call
         render json: { data: DeliveryRequestSerializer.new(result).as_json }
       end
@@ -57,15 +59,6 @@ module Api
 
       def set_delivery_request
         @delivery_request = DeliveryRequest
-          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
-          .find(params[:id])
-      end
-
-      # Scoping to the driver's own assigned requests means a driver probing
-      # someone else's request id gets the same 404 as a nonexistent id,
-      # rather than a 409 that would confirm it exists.
-      def set_own_delivery_request_for_driver
-        @delivery_request = current_driver.delivery_requests
           .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
           .find(params[:id])
       end
