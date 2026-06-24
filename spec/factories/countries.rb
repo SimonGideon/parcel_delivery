@@ -16,6 +16,10 @@ FactoryBot.define do
       region { "Africa" }
       latitude { 1.0 }
       longitude { 38.0 }
+      emoji { "🇰🇪" }
+      emoji_u { "U+1F1F0 U+1F1EA" }
+      timezone { "Africa/Nairobi" }
+      gmt_offset { 180 }
     end
   end
 end
