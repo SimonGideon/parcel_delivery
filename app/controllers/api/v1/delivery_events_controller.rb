@@ -8,7 +8,10 @@ module Api
         authorize! :read, @delivery_request
 
         events = @delivery_request.delivery_events
-        render json: { data: events.map { |event| DeliveryEventSerializer.new(event).as_json } }
+        render_success(
+          data: events.map { |event| DeliveryEventSerializer.new(event).as_json },
+          message: "Delivery events retrieved successfully"
+        )
       end
 
       private

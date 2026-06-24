@@ -7,7 +7,10 @@ module Api
         counties = County.order(:name)
         counties = counties.where(country_id: params[:country_id]) if params[:country_id].present?
 
-        render json: { data: counties.map { |county| CountySerializer.new(county).as_json } }
+        render_success(
+          data: counties.map { |county| CountySerializer.new(county).as_json },
+          message: "Counties retrieved successfully"
+        )
       end
     end
   end

@@ -9,6 +9,8 @@ RSpec.describe "Api::V1::DriverLocations", type: :request do
       post "/api/v1/driver_locations", params: params
 
       expect(response).to have_http_status(:unauthorized)
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be false
     end
 
     it "records a location for the authenticated driver" do
@@ -18,13 +20,18 @@ RSpec.describe "Api::V1::DriverLocations", type: :request do
 
       expect(response).to have_http_status(:created)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Location recorded successfully")
       expect(body.dig("data", "driver_id")).to eq(driver.id)
+      expect(body["meta"]).to be_nil
     end
 
     it "rejects invalid credentials" do
       post "/api/v1/driver_locations", params: params, headers: basic_auth_headers(driver.email, "wrong-password")
 
       expect(response).to have_http_status(:unauthorized)
+      body = JSON.parse(response.body)
+      expect(body["success"]).to be false
     end
   end
 end

@@ -6,9 +6,16 @@ module Api
 
       def create
         user = User.new(user_params)
-        user.save!
 
-        render json: { data: UserSerializer.new(user).as_json }, status: :created
+        if user.save
+          render_success(
+            data: UserSerializer.new(user).as_json,
+            message: "User created successfully",
+            status: :created
+          )
+        else
+          render_validation_errors(user)
+        end
       end
 
       private

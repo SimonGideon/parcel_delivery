@@ -5,7 +5,10 @@ module Api
 
       def index
         countries = Country.order(:name)
-        render json: { data: countries.map { |country| CountrySerializer.new(country).as_json } }
+        render_success(
+          data: countries.map { |country| CountrySerializer.new(country).as_json },
+          message: "Countries retrieved successfully"
+        )
       end
     end
   end

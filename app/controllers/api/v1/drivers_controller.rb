@@ -6,9 +6,16 @@ module Api
 
       def create
         driver = Driver.new(driver_params)
-        driver.save!
 
-        render json: { data: DriverSerializer.new(driver).as_json }, status: :created
+        if driver.save
+          render_success(
+            data: DriverSerializer.new(driver).as_json,
+            message: "Driver created successfully",
+            status: :created
+          )
+        else
+          render_validation_errors(driver)
+        end
       end
 
       private

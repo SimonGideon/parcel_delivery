@@ -10,7 +10,10 @@ RSpec.describe "Api::V1::Countries", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Countries retrieved successfully")
       expect(body["data"].map { |c| c["name"] }).to eq(%w[Kenya Uganda])
+      expect(body["meta"]).to be_nil
     end
 
     it "includes the enriched reference fields" do

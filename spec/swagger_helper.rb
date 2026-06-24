@@ -29,21 +29,16 @@ RSpec.configure do |config|
       ],
       components: {
         securitySchemes: {
-          basic_auth: {
+          bearer_auth: {
             type: :http,
-            scheme: :basic,
+            scheme: :bearer,
+            bearerFormat: :signed_token,
             description: <<~DESC.squish
-              HTTP Basic authentication. In the Authorize dialog, enter your account
-              email as the username and your password. Register first via POST
-              /api/v1/users (customers) or POST /api/v1/drivers (drivers). Some
-              endpoints accept only one principal type — e.g. POST /delivery_requests
-              requires customer credentials, not driver.
-
-              To test with different credentials, click "Logout" in this dialog
-              first. Once authorized, Swagger UI hides the username/password
-              fields and reuses the saved Authorization header for every
-              "Try it out" call until you log out — typing new (even wrong)
-              credentials without logging out first has no effect.
+              Log in via POST /api/v1/login with username (email) and password,
+              copy the returned token, then paste only the token value here.
+              Swagger UI will send it as Authorization: Bearer <token>.
+              Some endpoints accept only one principal type — e.g.
+              POST /delivery_requests requires a customer token, not a driver token.
             DESC
           }
         }

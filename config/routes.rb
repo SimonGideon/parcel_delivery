@@ -11,6 +11,8 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "health", to: "health#show"
 
+      post "login", to: "sessions#create"
+
       resources :users, only: %i[create]
       resources :drivers, only: %i[create]
       resources :driver_locations, only: %i[create]

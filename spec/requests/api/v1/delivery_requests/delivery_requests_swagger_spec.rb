@@ -3,19 +3,116 @@ require "swagger_helper"
 RSpec.describe "api/v1/delivery_requests", type: :request do
   let(:user) { create(:user, password: "password123") }
   let(:driver) { create(:driver, password: "password123", status: :available) }
-  let(:user_auth) { ActionController::HttpAuthentication::Basic.encode_credentials(user.email, "password123") }
-  let(:driver_auth) { ActionController::HttpAuthentication::Basic.encode_credentials(driver.email, "password123") }
+  let(:user_auth) { "Bearer #{AuthToken.issue(user)}" }
+  let(:driver_auth) { "Bearer #{AuthToken.issue(driver)}" }
+
+  address_schema = {
+    type: :object,
+    properties: {
+      id: { type: :string, format: :uuid },
+      line1: { type: :string, example: "123 Main St" },
+      line2: { type: :string, nullable: true },
+      city: { type: :string, example: "Nairobi" },
+      county: {
+        type: :object, nullable: true,
+        properties: { id: { type: :string, format: :uuid }, name: { type: :string, example: "Nairobi" } }
+      },
+      nearest_town: { type: :string, nullable: true, example: "Near Total Petrol Station, Ruiru" },
+      building_name: { type: :string, nullable: true, example: "ABC Place" },
+      floor: { type: :string, nullable: true, example: "3rd floor" },
+      door: { type: :string, nullable: true, example: "B12" },
+      instructions: { type: :string, nullable: true, example: "Call at the gate" },
+      postal_code: { type: :string, nullable: true },
+      country: {
+        type: :object, nullable: true,
+        properties: { id: { type: :string, format: :uuid }, name: { type: :string, example: "Kenya" } }
+      },
+      latitude: { type: :number, example: 1.2945 },
+      longitude: { type: :number, example: 36.8228 }
+    }
+  }.freeze
+
+  delivery_request_schema = {
+    type: :object,
+    properties: {
+      id: { type: :string, format: :uuid },
+      status: {
+        type: :string,
+        enum: %w[pending finding_driver assigned accepted picked_up in_transit delivered cancelled],
+        example: "pending"
+      },
+      package_description: { type: :string, example: "Books" },
+      package_weight: { type: :number, example: 2.5 },
+      pickup_address: address_schema,
+      delivery_address: address_schema,
+      user: {
+        type: :object,
+        properties: { id: { type: :string, format: :uuid }, name: { type: :string, example: "Alice" } }
+      },
+      driver: {
+        type: :object, nullable: true,
+        properties: { id: { type: :string, format: :uuid }, name: { type: :string, example: "Bob" } }
+      },
+      created_at: { type: :string, format: "date-time" },
+      updated_at: { type: :string, format: "date-time" }
+    }
+  }.freeze
+
+  # Builds the standard { success, message, data, meta } success envelope.
+  success_envelope = lambda do |message_example, data_schema|
+    {
+      type: :object,
+      properties: {
+        success: { type: :boolean, example: true },
+        message: { type: :string, example: message_example },
+        data: data_schema,
+        meta: { type: :object, nullable: true, example: nil }
+      },
+      required: %w[success message data meta]
+    }
+  end
+
+  # Builds the standard { success, message, errors } error envelope.
+  error_envelope = lambda do |message_example|
+    {
+      type: :object,
+      properties: {
+        success: { type: :boolean, example: false },
+        message: { type: :string, example: message_example },
+        errors: { type: :array, items: { type: :object }, example: [] }
+      },
+      required: %w[success message errors]
+    }
+  end
 
   path "/api/v1/delivery_requests" do
     get "Lists the authenticated customer's or driver's delivery requests" do
       tags "Delivery Requests"
       produces "application/json"
-      security [{ basic_auth: [] }]
+      security [{ bearer_auth: [] }]
 
       parameter name: :page, in: :query, type: :integer, required: false
       parameter name: :per_page, in: :query, type: :integer, required: false
 
       response "200", "requests returned" do
+        schema type: :object,
+               properties: {
+                 success: { type: :boolean, example: true },
+                 message: { type: :string, example: "Delivery requests retrieved successfully" },
+                 data: { type: :array, items: delivery_request_schema },
+                 meta: {
+                   type: :object,
+                   properties: {
+                     current_page: { type: :integer, example: 1 },
+                     next_page: { type: :integer, nullable: true },
+                     prev_page: { type: :integer, nullable: true },
+                     total_pages: { type: :integer, example: 1 },
+                     total_count: { type: :integer, example: 1 }
+                   }
+                 }
+               },
+               required: %w[success message data meta]
+
         let(:Authorization) { user_auth }
         before { create(:delivery_request, user: user) }
         run_test!
@@ -26,11 +123,11 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       tags "Delivery Requests"
       consumes "application/json"
       produces "application/json"
-      security [{ basic_auth: [] }]
+      security [{ bearer_auth: [] }]
       description <<~DESC
-        Requires **customer** credentials. Register via POST /api/v1/users, then
-        Authorize with that email (username) and password. Driver credentials
-        will not work on this endpoint.
+        Requires a **customer** bearer token. Register via POST /api/v1/users,
+        log in via POST /api/v1/login, then paste the returned token into
+        Swagger Authorize. Driver tokens will not work on this endpoint.
       DESC
 
       parameter name: :delivery_request, in: :body, schema: {
@@ -82,6 +179,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       }
 
       response "201", "delivery request created" do
+        schema success_envelope.call("Delivery request created successfully", delivery_request_schema)
+
         let(:Authorization) { user_auth }
         let(:delivery_request) do
           {
@@ -97,6 +196,8 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       end
 
       response "401", "missing or invalid credentials" do
+        schema error_envelope.call("Missing Authorization header — log in and use the returned bearer token in Swagger")
+
         let(:Authorization) { "" }
         let(:delivery_request) do
           {
@@ -117,17 +218,21 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
     get "Retrieves a delivery request visible to its owner or assigned driver" do
       tags "Delivery Requests"
       produces "application/json"
-      security [{ basic_auth: [] }]
+      security [{ bearer_auth: [] }]
 
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "delivery request found" do
+        schema success_envelope.call("Delivery request retrieved successfully", delivery_request_schema)
+
         let(:Authorization) { user_auth }
         let(:id) { create(:delivery_request, user: user).id }
         run_test!
       end
 
       response "404", "not visible to this principal" do
+        schema error_envelope.call("Couldn't find DeliveryRequest")
+
         let(:Authorization) { user_auth }
         let(:id) { create(:delivery_request).id }
         run_test!
@@ -139,17 +244,21 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
     post "Driver accepts an assigned delivery request" do
       tags "Delivery Requests"
       produces "application/json"
-      security [{ basic_auth: [] }]
+      security [{ bearer_auth: [] }]
 
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request accepted" do
+        schema success_envelope.call("Delivery request accepted", delivery_request_schema)
+
         let(:Authorization) { driver_auth }
         let(:id) { create(:delivery_request, driver: driver, status: :assigned).id }
         run_test!
       end
 
       response "409", "request is not in assigned status" do
+        schema error_envelope.call("Delivery request cannot be accepted from status 'accepted'")
+
         let(:Authorization) { driver_auth }
         let(:id) { create(:delivery_request, driver: driver, status: :accepted).id }
         run_test!
@@ -161,11 +270,13 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
     post "Driver rejects an assigned delivery request, triggering re-assignment" do
       tags "Delivery Requests"
       produces "application/json"
-      security [{ basic_auth: [] }]
+      security [{ bearer_auth: [] }]
 
       parameter name: :id, in: :path, type: :string, format: :uuid
 
       response "200", "request rejected" do
+        schema success_envelope.call("Delivery request rejected", delivery_request_schema)
+
         let(:Authorization) { driver_auth }
         let(:id) { create(:delivery_request, driver: driver, status: :assigned).id }
         run_test!

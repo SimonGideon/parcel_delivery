@@ -10,7 +10,11 @@ module Api
 
         location = current_driver.driver_locations.create!(driver_location_params)
 
-        render json: { data: DriverLocationSerializer.new(location).as_json }, status: :created
+        render_success(
+          data: DriverLocationSerializer.new(location).as_json,
+          message: "Location recorded successfully",
+          status: :created
+        )
       end
 
       private

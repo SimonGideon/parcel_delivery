@@ -10,7 +10,7 @@ paths:
       tags:
       - Delivery Events
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters:
       - name: delivery_request_id
         in: path
@@ -21,13 +21,59 @@ paths:
       responses:
         '200':
           description: event history returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery events retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        event_type:
+                          type: string
+                          enum:
+                          - created
+                          - finding_driver
+                          - driver_assigned
+                          - driver_accepted
+                          - driver_rejected
+                          - picked_up
+                          - in_transit
+                          - delivered
+                          - cancelled
+                          example: created
+                        metadata:
+                          type: object
+                        occurred_at:
+                          type: string
+                          format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
   "/api/v1/delivery_requests":
     get:
       summary: Lists the authenticated customer's or driver's delivery requests
       tags:
       - Delivery Requests
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters:
       - name: page
         in: query
@@ -42,22 +88,453 @@ paths:
       responses:
         '200':
           description: requests returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery requests retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        status:
+                          type: string
+                          enum:
+                          - pending
+                          - finding_driver
+                          - assigned
+                          - accepted
+                          - picked_up
+                          - in_transit
+                          - delivered
+                          - cancelled
+                          example: pending
+                        package_description:
+                          type: string
+                          example: Books
+                        package_weight:
+                          type: number
+                          example: 2.5
+                        pickup_address:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            line1:
+                              type: string
+                              example: 123 Main St
+                            line2:
+                              type: string
+                              nullable: true
+                            city:
+                              type: string
+                              example: Nairobi
+                            county:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                  example: Nairobi
+                            nearest_town:
+                              type: string
+                              nullable: true
+                              example: Near Total Petrol Station, Ruiru
+                            building_name:
+                              type: string
+                              nullable: true
+                              example: ABC Place
+                            floor:
+                              type: string
+                              nullable: true
+                              example: 3rd floor
+                            door:
+                              type: string
+                              nullable: true
+                              example: B12
+                            instructions:
+                              type: string
+                              nullable: true
+                              example: Call at the gate
+                            postal_code:
+                              type: string
+                              nullable: true
+                            country:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                  example: Kenya
+                            latitude:
+                              type: number
+                              example: 1.2945
+                            longitude:
+                              type: number
+                              example: 36.8228
+                        delivery_address:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            line1:
+                              type: string
+                              example: 123 Main St
+                            line2:
+                              type: string
+                              nullable: true
+                            city:
+                              type: string
+                              example: Nairobi
+                            county:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                  example: Nairobi
+                            nearest_town:
+                              type: string
+                              nullable: true
+                              example: Near Total Petrol Station, Ruiru
+                            building_name:
+                              type: string
+                              nullable: true
+                              example: ABC Place
+                            floor:
+                              type: string
+                              nullable: true
+                              example: 3rd floor
+                            door:
+                              type: string
+                              nullable: true
+                              example: B12
+                            instructions:
+                              type: string
+                              nullable: true
+                              example: Call at the gate
+                            postal_code:
+                              type: string
+                              nullable: true
+                            country:
+                              type: object
+                              nullable: true
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                name:
+                                  type: string
+                                  example: Kenya
+                            latitude:
+                              type: number
+                              example: 1.2945
+                            longitude:
+                              type: number
+                              example: 36.8228
+                        user:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                              example: Alice
+                        driver:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            name:
+                              type: string
+                              example: Bob
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      next_page:
+                        type: integer
+                        nullable: true
+                      prev_page:
+                        type: integer
+                        nullable: true
+                      total_pages:
+                        type: integer
+                        example: 1
+                      total_count:
+                        type: integer
+                        example: 1
+                required:
+                - success
+                - message
+                - data
+                - meta
     post:
       summary: Creates a delivery request and triggers nearest-driver search
       tags:
       - Delivery Requests
       security:
-      - basic_auth: []
+      - bearer_auth: []
       description: |
-        Requires **customer** credentials. Register via POST /api/v1/users, then
-        Authorize with that email (username) and password. Driver credentials
-        will not work on this endpoint.
+        Requires a **customer** bearer token. Register via POST /api/v1/users,
+        log in via POST /api/v1/login, then paste the returned token into
+        Swagger Authorize. Driver tokens will not work on this endpoint.
       parameters: []
       responses:
         '201':
           description: delivery request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery request created successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum:
+                        - pending
+                        - finding_driver
+                        - assigned
+                        - accepted
+                        - picked_up
+                        - in_transit
+                        - delivered
+                        - cancelled
+                        example: pending
+                      package_description:
+                        type: string
+                        example: Books
+                      package_weight:
+                        type: number
+                        example: 2.5
+                      pickup_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      delivery_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Alice
+                      driver:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Bob
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
         '401':
           description: missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing Authorization header — log in and use the returned
+                      bearer token in Swagger
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
       requestBody:
         content:
           application/json:
@@ -178,7 +655,7 @@ paths:
       tags:
       - Delivery Requests
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters:
       - name: id
         in: path
@@ -189,15 +666,232 @@ paths:
       responses:
         '200':
           description: delivery request found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery request retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum:
+                        - pending
+                        - finding_driver
+                        - assigned
+                        - accepted
+                        - picked_up
+                        - in_transit
+                        - delivered
+                        - cancelled
+                        example: pending
+                      package_description:
+                        type: string
+                        example: Books
+                      package_weight:
+                        type: number
+                        example: 2.5
+                      pickup_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      delivery_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Alice
+                      driver:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Bob
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
         '404':
           description: not visible to this principal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Couldn't find DeliveryRequest
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
   "/api/v1/delivery_requests/{id}/accept":
     post:
       summary: Driver accepts an assigned delivery request
       tags:
       - Delivery Requests
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters:
       - name: id
         in: path
@@ -208,15 +902,232 @@ paths:
       responses:
         '200':
           description: request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery request accepted
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum:
+                        - pending
+                        - finding_driver
+                        - assigned
+                        - accepted
+                        - picked_up
+                        - in_transit
+                        - delivered
+                        - cancelled
+                        example: pending
+                      package_description:
+                        type: string
+                        example: Books
+                      package_weight:
+                        type: number
+                        example: 2.5
+                      pickup_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      delivery_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Alice
+                      driver:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Bob
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
         '409':
           description: request is not in assigned status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Delivery request cannot be accepted from status 'accepted'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
   "/api/v1/delivery_requests/{id}/reject":
     post:
       summary: Driver rejects an assigned delivery request, triggering re-assignment
       tags:
       - Delivery Requests
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters:
       - name: id
         in: path
@@ -227,19 +1138,275 @@ paths:
       responses:
         '200':
           description: request rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Delivery request rejected
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum:
+                        - pending
+                        - finding_driver
+                        - assigned
+                        - accepted
+                        - picked_up
+                        - in_transit
+                        - delivered
+                        - cancelled
+                        example: pending
+                      package_description:
+                        type: string
+                        example: Books
+                      package_weight:
+                        type: number
+                        example: 2.5
+                      pickup_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      delivery_address:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          line1:
+                            type: string
+                            example: 123 Main St
+                          line2:
+                            type: string
+                            nullable: true
+                          city:
+                            type: string
+                            example: Nairobi
+                          county:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Nairobi
+                          nearest_town:
+                            type: string
+                            nullable: true
+                            example: Near Total Petrol Station, Ruiru
+                          building_name:
+                            type: string
+                            nullable: true
+                            example: ABC Place
+                          floor:
+                            type: string
+                            nullable: true
+                            example: 3rd floor
+                          door:
+                            type: string
+                            nullable: true
+                            example: B12
+                          instructions:
+                            type: string
+                            nullable: true
+                            example: Call at the gate
+                          postal_code:
+                            type: string
+                            nullable: true
+                          country:
+                            type: object
+                            nullable: true
+                            properties:
+                              id:
+                                type: string
+                                format: uuid
+                              name:
+                                type: string
+                                example: Kenya
+                          latitude:
+                            type: number
+                            example: 1.2945
+                          longitude:
+                            type: number
+                            example: 36.8228
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Alice
+                      driver:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Bob
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
   "/api/v1/driver_locations":
     post:
       summary: Reports the authenticated driver's current location
       tags:
       - Driver Locations
       security:
-      - basic_auth: []
+      - bearer_auth: []
       parameters: []
       responses:
         '201':
           description: location recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Location recorded successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      driver_id:
+                        type: string
+                        format: uuid
+                      latitude:
+                        type: number
+                        example: 1.2921
+                      longitude:
+                        type: number
+                        example: 36.8219
+                      recorded_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
         '401':
           description: missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing Authorization header — log in and use the returned
+                      bearer token in Swagger
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
       requestBody:
         content:
           application/json:
@@ -262,11 +1429,88 @@ paths:
     post:
       summary: Registers a driver account
       tags:
-      - Drivers
+      - Authentication
       parameters: []
       responses:
         '201':
           description: driver created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Driver created successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                        example: Bob
+                      email:
+                        type: string
+                        example: bob@example.com
+                      phone:
+                        type: string
+                        nullable: true
+                        example: "+15557654"
+                      status:
+                        type: string
+                        enum:
+                        - available
+                        - unavailable
+                        - on_delivery
+                        example: available
+                      created_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
+        '422':
+          description: validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: email
+                        message:
+                          type: string
+                          example: has already been taken
+                        code:
+                          type: string
+                          example: taken
+                required:
+                - success
+                - message
+                - errors
       requestBody:
         content:
           application/json:
@@ -335,6 +1579,40 @@ paths:
       responses:
         '200':
           description: counties returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Counties retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                          example: Nairobi
+                        country_id:
+                          type: string
+                          format: uuid
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
   "/api/v1/countries":
     get:
       summary: Lists countries (reference data for address forms)
@@ -343,17 +1621,276 @@ paths:
       responses:
         '200':
           description: countries returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Countries retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        name:
+                          type: string
+                          example: Kenya
+                        iso2:
+                          type: string
+                          example: KE
+                        iso3:
+                          type: string
+                          nullable: true
+                          example: KEN
+                        phonecode:
+                          type: string
+                          nullable: true
+                          example: "+254"
+                        capital:
+                          type: string
+                          nullable: true
+                          example: Nairobi
+                        currency:
+                          type: string
+                          nullable: true
+                          example: KES
+                        currency_symbol:
+                          type: string
+                          nullable: true
+                          example: KSh
+                        region:
+                          type: string
+                          nullable: true
+                          example: Africa
+                        latitude:
+                          type: number
+                          nullable: true
+                          example: 1.0
+                        longitude:
+                          type: number
+                          nullable: true
+                          example: 38.0
+                        timezone:
+                          type: string
+                          nullable: true
+                          example: Africa/Nairobi
+                        gmt_offset:
+                          type: integer
+                          nullable: true
+                          example: 180
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
+  "/api/v1/login":
+    post:
+      summary: Logs in with username/password and returns a bearer token
+      tags:
+      - Authentication
+      description: Enter your account email as username and your password. Copy the
+        returned token into Swagger's Authorize dialog. Use principal_type when the
+        same email exists for both a customer and a driver.
+      parameters: []
+      responses:
+        '200':
+          description: credentials are valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - user
+                        - driver
+                        example: user
+                      token:
+                        type: string
+                      token_type:
+                        type: string
+                        example: Bearer
+                      expires_in:
+                        type: integer
+                        example: 86400
+                      principal:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: Simon
+                          email:
+                            type: string
+                            example: simon@example.com
+                          phone:
+                            type: string
+                            nullable: true
+                          created_at:
+                            type: string
+                            format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
+        '401':
+          description: missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid username or password
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+                required:
+                - success
+                - message
+                - errors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                      example: alice@example.com
+                    password:
+                      type: string
+                      format: password
+                      example: password123
+                    principal_type:
+                      type: string
+                      enum:
+                      - user
+                      - driver
+                      nullable: true
+                      example: user
+                  required:
+                  - username
+                  - password
+              required:
+              - login
   "/api/v1/users":
     post:
       summary: Registers a customer account
       tags:
-      - Users
+      - Authentication
       parameters: []
       responses:
         '201':
           description: user created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User created successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      name:
+                        type: string
+                        example: Alice
+                      email:
+                        type: string
+                        example: alice@example.com
+                      phone:
+                        type: string
+                        nullable: true
+                        example: "+15551234"
+                      created_at:
+                        type: string
+                        format: date-time
+                  meta:
+                    type: object
+                    nullable: true
+                    example:
+                required:
+                - success
+                - message
+                - data
+                - meta
         '422':
           description: validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Validation failed
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: email
+                        message:
+                          type: string
+                          example: has already been taken
+                        code:
+                          type: string
+                          example: taken
+                required:
+                - success
+                - message
+                - errors
       requestBody:
         content:
           application/json:
@@ -384,15 +1921,12 @@ servers:
 - url: "/"
 components:
   securitySchemes:
-    basic_auth:
+    bearer_auth:
       type: http
-      scheme: basic
-      description: HTTP Basic authentication. In the Authorize dialog, enter your
-        account email as the username and your password. Register first via POST /api/v1/users
-        (customers) or POST /api/v1/drivers (drivers). Some endpoints accept only
-        one principal type — e.g. POST /delivery_requests requires customer credentials,
-        not driver. To test with different credentials, click "Logout" in this dialog
-        first. Once authorized, Swagger UI hides the username/password fields and
-        reuses the saved Authorization header for every "Try it out" call until you
-        log out — typing new (even wrong) credentials without logging out first has
-        no effect.
+      scheme: bearer
+      bearerFormat: signed_token
+      description: 'Log in via POST /api/v1/login with username (email) and password,
+        copy the returned token, then paste only the token value here. Swagger UI
+        will send it as Authorization: Bearer <token>. Some endpoints accept only
+        one principal type — e.g. POST /delivery_requests requires a customer token,
+        not a driver token.'

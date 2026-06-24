@@ -14,6 +14,8 @@ RSpec.describe "Api::V1::DeliveryEvents", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Delivery events retrieved successfully")
       expect(body["data"].map { |e| e["event_type"] }).to eq(%w[created finding_driver])
     end
 

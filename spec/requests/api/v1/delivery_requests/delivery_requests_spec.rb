@@ -29,8 +29,18 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
 
       expect(response).to have_http_status(:created)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Delivery request created successfully")
       expect(body.dig("data", "status")).to eq("pending")
       expect(body.dig("data", "pickup_address", "city")).to eq("Nairobi")
+    end
+
+    it "accepts bearer token authentication from login" do
+      expect {
+        post "/api/v1/delivery_requests", params: params, headers: bearer_auth_headers(user)
+      }.to have_enqueued_job(AssignNearestDriverJob)
+
+      expect(response).to have_http_status(:created)
     end
 
     it "returns 422 when package_weight is invalid" do
@@ -89,6 +99,17 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
       body = JSON.parse(response.body)
       expect(body["data"].map { |d| d["id"] }).to eq([mine.id])
     end
+
+    it "returns assigned requests using a driver bearer token" do
+      mine = create(:delivery_request, driver: driver, status: :assigned)
+      create(:delivery_request)
+
+      get "/api/v1/delivery_requests", headers: bearer_auth_headers(driver)
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["data"].map { |d| d["id"] }).to eq([mine.id])
+    end
   end
 
   describe "GET /api/v1/delivery_requests/:id" do
@@ -118,6 +139,8 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Delivery request accepted")
       expect(body.dig("data", "status")).to eq("accepted")
       expect(driver.reload.status).to eq("on_delivery")
     end
@@ -150,6 +173,8 @@ RSpec.describe "Api::V1::DeliveryRequests", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Delivery request rejected")
       expect(body.dig("data", "status")).to eq("finding_driver")
       expect(body.dig("data", "driver")).to be_nil
     end

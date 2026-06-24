@@ -11,6 +11,8 @@ RSpec.describe "Api::V1::Counties", type: :request do
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
+      expect(body["success"]).to be true
+      expect(body["message"]).to eq("Counties retrieved successfully")
       expect(body["data"].map { |c| c["name"] }).to eq(%w[Mombasa Nairobi])
     end
 

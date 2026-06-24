@@ -15,16 +15,20 @@ module Api
           .page(params[:page])
           .per(params[:per_page] || 25)
 
-        render json: {
+        render_success(
           data: delivery_requests.map { |dr| DeliveryRequestSerializer.new(dr).as_json },
+          message: "Delivery requests retrieved successfully",
           meta: pagination_meta(delivery_requests)
-        }
+        )
       end
 
       def show
         authorize! :read, @delivery_request
 
-        render json: { data: DeliveryRequestSerializer.new(@delivery_request).as_json }
+        render_success(
+          data: DeliveryRequestSerializer.new(@delivery_request).as_json,
+          message: "Delivery request retrieved successfully"
+        )
       end
 
       def create
@@ -38,21 +42,25 @@ module Api
           package_weight: delivery_request_params[:package_weight]
         ).call
 
-        render json: { data: DeliveryRequestSerializer.new(delivery_request).as_json }, status: :created
+        render_success(
+          data: DeliveryRequestSerializer.new(delivery_request).as_json,
+          message: "Delivery request created successfully",
+          status: :created
+        )
       end
 
       def accept
         authorize! :accept, @delivery_request
 
         result = DeliveryRequests::Accept.new(delivery_request: @delivery_request, driver: current_driver).call
-        render json: { data: DeliveryRequestSerializer.new(result).as_json }
+        render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request accepted")
       end
 
       def reject
         authorize! :reject, @delivery_request
 
         result = DeliveryRequests::Reject.new(delivery_request: @delivery_request, driver: current_driver).call
-        render json: { data: DeliveryRequestSerializer.new(result).as_json }
+        render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request rejected")
       end
 
       private
