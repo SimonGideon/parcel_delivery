@@ -6,19 +6,6 @@ module Api
       before_action :authenticate_driver!, only: %i[driver_index accept reject pick_up deliver]
       before_action :set_delivery_request, only: %i[show cancel accept reject pick_up deliver]
 
-      SORT_COLUMNS = {
-        "created_at" => "created_at",
-        "updated_at" => "updated_at",
-        "status" => "status",
-        "package_weight" => "package_weight"
-      }.freeze
-      SORT_DIRECTIONS = %w[asc desc].freeze
-      DRIVER_FILTERABLE_STATUSES = %w[
-        finding_driver assigned accepted picked_up in_transit delivered cancelled
-      ].freeze
-      DEFAULT_PER_PAGE = 25
-      MAX_PER_PAGE = 100
-
       def customer_index
         render_delivery_requests
       end
@@ -57,7 +44,11 @@ module Api
       def accept
         authorize! :accept, @delivery_request
 
-        result = DeliveryRequests::Accept.new(delivery_request: @delivery_request, driver: current_driver).call
+        result = DeliveryRequests::DriverDecision.new(
+          delivery_request: @delivery_request,
+          driver: current_driver,
+          decision: :accept
+        ).call
         render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request accepted")
       end
 
@@ -71,7 +62,11 @@ module Api
       def reject
         authorize! :reject, @delivery_request
 
-        result = DeliveryRequests::Reject.new(delivery_request: @delivery_request, driver: current_driver).call
+        result = DeliveryRequests::DriverDecision.new(
+          delivery_request: @delivery_request,
+          driver: current_driver,
+          decision: :reject
+        ).call
         render_success(data: DeliveryRequestSerializer.new(result).as_json, message: "Delivery request rejected")
       end
 
@@ -92,146 +87,26 @@ module Api
       private
 
       def render_delivery_requests
-        return render_error(message: validation_error, status: :bad_request) if validation_error
-
-        delivery_requests = visible_delivery_requests
-          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
-        delivery_requests = apply_filters(delivery_requests)
-        delivery_requests = apply_search(delivery_requests)
-        delivery_requests = delivery_requests
-          .order(sort_column => sort_direction)
-          .page(params[:page])
-          .per(per_page)
+        query = DeliveryRequests::ListQuery.new(
+          params: params,
+          principal: current_user || current_driver,
+          ability: current_ability
+        )
+        delivery_requests = query.call.includes(:user, :driver)
+        return render_error(message: query.validation_error, status: :bad_request) if query.validation_error
 
         render_success(
           data: delivery_requests.map { |dr| DeliveryRequestSerializer.new(dr).as_json },
           message: "Delivery requests retrieved successfully",
           meta: pagination_meta(delivery_requests).merge(
-            filters: { allowed_statuses: filterable_statuses }
+            filters: { allowed_statuses: query.filterable_statuses }
           )
         )
-      end
-
-      def visible_delivery_requests
-        return DeliveryRequest.accessible_by(current_ability, :read) if current_user
-
-        DeliveryRequest
-          .left_joins(:delivery_events)
-          .where(driver_id: current_driver.id)
-          .or(
-            DeliveryRequest
-              .left_joins(:delivery_events)
-              .where(delivery_events: { event_type: DeliveryEvent.event_types[:driver_rejected] })
-              .where("delivery_events.metadata ->> 'driver_id' = ?", current_driver.id)
-          )
-          .distinct
-      end
-
-      def apply_filters(scope)
-        scope = scope.where(status: params[:status]) if params[:status].present?
-        scope = scope.where("delivery_requests.created_at >= ?", created_from) if created_from
-        scope = scope.where("delivery_requests.created_at <= ?", created_to) if created_to
-        scope = scope.where(driver_id: params[:driver_id]) if params[:driver_id].present?
-        scope
-      end
-
-      def apply_search(scope)
-        return scope if params[:q].blank?
-
-        query = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s.strip)}%"
-        scope.where(
-          <<~SQL.squish,
-            delivery_requests.package_description ILIKE :query
-            OR EXISTS (
-              SELECT 1 FROM addresses pickup_addresses
-              WHERE pickup_addresses.id = delivery_requests.pickup_address_id
-                AND (
-                  pickup_addresses.city ILIKE :query
-                  OR pickup_addresses.nearest_town ILIKE :query
-                  OR pickup_addresses.line1 ILIKE :query
-                )
-            )
-            OR EXISTS (
-              SELECT 1 FROM addresses delivery_addresses
-              WHERE delivery_addresses.id = delivery_requests.delivery_address_id
-                AND (
-                  delivery_addresses.city ILIKE :query
-                  OR delivery_addresses.nearest_town ILIKE :query
-                  OR delivery_addresses.line1 ILIKE :query
-                )
-            )
-          SQL
-          query: query
-        )
-      end
-
-      def validation_error
-        return invalid_status_message if invalid_status?
-        return "Invalid sort_by: #{params[:sort_by]}" if invalid_sort_by?
-        return "Invalid sort_direction: #{params[:sort_direction]}" if invalid_sort_direction?
-        return "created_from must be a valid ISO8601 date/time" if params[:created_from].present? && created_from.nil?
-        return "created_to must be a valid ISO8601 date/time" if params[:created_to].present? && created_to.nil?
-        return "page must be greater than 0" if params[:page].present? && page < 1
-        return "per_page must be between 1 and #{MAX_PER_PAGE}" if params[:per_page].present? && !per_page.between?(1, MAX_PER_PAGE)
-      end
-
-      def invalid_status?
-        params[:status].present? && filterable_statuses.exclude?(params[:status])
-      end
-
-      def invalid_status_message
-        "Invalid status filter: #{params[:status]}. Allowed statuses: #{filterable_statuses.join(', ')}"
-      end
-
-      def filterable_statuses
-        return DeliveryRequest.statuses.keys if current_user
-
-        DRIVER_FILTERABLE_STATUSES
-      end
-
-      def invalid_sort_by?
-        params[:sort_by].present? && !SORT_COLUMNS.key?(params[:sort_by])
-      end
-
-      def invalid_sort_direction?
-        params[:sort_direction].present? && SORT_DIRECTIONS.exclude?(params[:sort_direction].to_s.downcase)
-      end
-
-      def sort_column
-        SORT_COLUMNS.fetch(params[:sort_by].presence || "created_at")
-      end
-
-      def sort_direction
-        (params[:sort_direction].presence || "desc").to_s.downcase
-      end
-
-      def page
-        params[:page].to_i
-      end
-
-      def per_page
-        (params[:per_page].presence || DEFAULT_PER_PAGE).to_i
-      end
-
-      def created_from
-        @created_from ||= parse_time(params[:created_from])
-      end
-
-      def created_to
-        @created_to ||= parse_time(params[:created_to])
-      end
-
-      def parse_time(value)
-        return if value.blank?
-
-        Time.zone.iso8601(value)
-      rescue ArgumentError
-        nil
       end
 
       def set_delivery_request
         @delivery_request = DeliveryRequest
-          .includes(:user, :driver, pickup_address: %i[country county], delivery_address: %i[country county])
+          .includes(:user, :driver)
           .find(params[:id])
       end
 

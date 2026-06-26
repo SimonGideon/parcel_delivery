@@ -7,7 +7,7 @@ module Authenticatable
   # Authenticates a customer via bearer token or HTTP Basic (email:password).
   def authenticate_user!
     principal = bearer_principal
-    @current_user = principal if principal.is_a?(User)
+    @current_user = principal if customer_principal?(principal)
     @current_user ||= authenticate_basic_user
 
     render_unauthorized unless @current_user
@@ -27,10 +27,10 @@ module Authenticatable
   # it. Bearer tokens encode the principal type; Basic tries both tables.
   def authenticate_user_or_driver!
     case (principal = bearer_principal)
-    when User
-      @current_user = principal
     when Driver
       @current_driver = principal
+    when User
+      @current_user = principal
     end
 
     authenticate_basic_user_or_driver! unless @current_user || @current_driver
@@ -84,7 +84,7 @@ module Authenticatable
 
   def authenticate_basic_user
     authenticate_with_http_basic do |email, password|
-      user = User.find_by(email: email.to_s.downcase)
+      user = User.customers.find_by(email: email.to_s.downcase)
       user if user&.authenticate(password)
     end
   end
@@ -99,7 +99,7 @@ module Authenticatable
   def authenticate_basic_user_or_driver!
     authenticate_with_http_basic do |email, password|
       email = email.to_s.downcase
-      user = User.find_by(email: email)
+      user = User.customers.find_by(email: email)
 
       if user&.authenticate(password)
         @current_user = user
@@ -109,5 +109,9 @@ module Authenticatable
       driver = Driver.find_by(email: email)
       driver&.authenticate(password) && (@current_driver = driver)
     end
+  end
+
+  def customer_principal?(principal)
+    principal.is_a?(User) && !principal.is_a?(Driver)
   end
 end

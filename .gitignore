@@ -48,3 +48,9 @@ graphify-out/
 # Internal reference docs
 req_doc/
 req_doc.pdf
+
+
+
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat

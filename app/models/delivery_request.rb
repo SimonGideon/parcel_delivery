@@ -1,8 +1,6 @@
 class DeliveryRequest < ApplicationRecord
   belongs_to :user
-  belongs_to :driver, optional: true
-  belongs_to :pickup_address, class_name: "Address"
-  belongs_to :delivery_address, class_name: "Address"
+  belongs_to :driver, class_name: "Driver", optional: true
   has_many :delivery_events, -> { order(occurred_at: :asc) }, dependent: :destroy
 
   # "rejected" is intentionally not a status here: a driver rejection sends the
@@ -21,6 +19,31 @@ class DeliveryRequest < ApplicationRecord
 
   validates :package_description, presence: true
   validates :package_weight, presence: true, numericality: { greater_than: 0 }
+  validate :addresses_are_valid
+
+  def pickup_address
+    DeliveryRequestAddress.from(self[:pickup_address])
+  end
+
+  def pickup_address=(value)
+    self[:pickup_address] = DeliveryRequestAddress.from(value).to_h
+  end
+
+  def delivery_address
+    DeliveryRequestAddress.from(self[:delivery_address])
+  end
+
+  def delivery_address=(value)
+    self[:delivery_address] = DeliveryRequestAddress.from(value).to_h
+  end
+
+  def country
+    nil
+  end
+
+  def county
+    nil
+  end
 
   # Records a DeliveryEvent and broadcasts an ActiveSupport::Notifications event so
   # downstream concerns (background jobs, future notifications) stay decoupled from
@@ -29,5 +52,20 @@ class DeliveryRequest < ApplicationRecord
     event = delivery_events.create!(event_type: event_type, metadata: metadata, occurred_at: Time.current)
     ActiveSupport::Notifications.instrument("delivery_request.#{event_type}", delivery_request_id: id, metadata: metadata)
     event
+  end
+
+  private
+
+  def addresses_are_valid
+    validate_address(:pickup_address, pickup_address)
+    validate_address(:delivery_address, delivery_address)
+  end
+
+  def validate_address(_attribute, address)
+    return if address.valid?
+
+    address.errors.each do |error|
+      errors.add(error.attribute, error.type, **error.options)
+    end
   end
 end

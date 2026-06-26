@@ -5,10 +5,10 @@ class Ability
     return if principal.nil?
 
     case principal
-    when User
-      user_abilities(principal)
     when Driver
       driver_abilities(principal)
+    when User
+      user_abilities(principal)
     end
   end
 

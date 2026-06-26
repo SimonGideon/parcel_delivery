@@ -23,12 +23,12 @@ RSpec.describe DeliveryRequests::Creator do
     expect(delivery_request.user).to eq(user)
   end
 
-  it "persists distinct pickup and delivery addresses" do
+  it "stores distinct pickup and delivery address snapshots on the request" do
     delivery_request = build_creator.call
 
     expect(delivery_request.pickup_address.city).to eq("Nairobi")
     expect(delivery_request.delivery_address.line1).to eq("456 Side St")
-    expect(delivery_request.pickup_address.id).not_to eq(delivery_request.delivery_address.id)
+    expect(delivery_request[:pickup_address]).not_to eq(delivery_request[:delivery_address])
   end
 
   it "records a created DeliveryEvent" do
@@ -51,6 +51,6 @@ RSpec.describe DeliveryRequests::Creator do
     )
 
     expect { creator.call }.to raise_error(ActiveRecord::RecordInvalid)
-    expect(Address.count).to eq(0)
+    expect(DeliveryRequest.count).to eq(0)
   end
 end

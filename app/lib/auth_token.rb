@@ -23,8 +23,8 @@ class AuthToken
 
   def self.principal_type(principal)
     case principal
-    when User then "user"
     when Driver then "driver"
+    when User then "user"
     else
       raise ArgumentError, "unsupported principal: #{principal.class.name}"
     end
