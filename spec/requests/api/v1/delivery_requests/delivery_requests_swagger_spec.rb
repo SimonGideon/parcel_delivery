@@ -9,7 +9,6 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
   address_schema = {
     type: :object,
     properties: {
-      id: { type: :string, format: :uuid },
       line1: { type: :string, example: "123 Main St" },
       line2: { type: :string, nullable: true },
       city: { type: :string, example: "Nairobi" },
@@ -118,30 +117,37 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
   }.freeze
 
   shared_list_query_parameters = lambda do
-    parameter name: :status, in: :query, type: :string, required: false,
+    parameter name: :status, in: :query, required: false,
+      schema: { type: :string },
       description: <<~DESC.squish
         Filter by lifecycle status. Allowed values are role-specific and are
         returned in meta.filters.allowed_statuses. Customer tokens may filter
         all lifecycle statuses; driver tokens may filter only driver-visible
         statuses.
       DESC
-    parameter name: :driver_id, in: :query, type: :string, format: :uuid, required: false,
+    parameter name: :driver_id, in: :query, required: false,
+      schema: { type: :string, format: :uuid },
       description: "Filter visible requests by assigned driver id"
-    parameter name: :created_from, in: :query, type: :string, format: "date-time", required: false,
+    parameter name: :created_from, in: :query, required: false,
+      schema: { type: :string, format: "date-time" },
       description: "Filter requests created at or after this ISO8601 timestamp"
-    parameter name: :created_to, in: :query, type: :string, format: "date-time", required: false,
+    parameter name: :created_to, in: :query, required: false,
+      schema: { type: :string, format: "date-time" },
       description: "Filter requests created at or before this ISO8601 timestamp"
-    parameter name: :q, in: :query, type: :string, required: false,
+    parameter name: :q, in: :query, required: false,
+      schema: { type: :string },
       description: "Search package_description plus pickup/delivery city, nearest_town, and line1"
-    parameter name: :sort_by, in: :query, type: :string, required: false,
-      enum: %w[created_at updated_at status package_weight],
+    parameter name: :sort_by, in: :query, required: false,
+      schema: { type: :string, enum: %w[created_at updated_at status package_weight] },
       description: "Sort field. Defaults to created_at"
-    parameter name: :sort_direction, in: :query, type: :string, required: false,
-      enum: %w[asc desc],
+    parameter name: :sort_direction, in: :query, required: false,
+      schema: { type: :string, enum: %w[asc desc] },
       description: "Sort direction. Defaults to desc"
-    parameter name: :page, in: :query, type: :integer, required: false,
+    parameter name: :page, in: :query, required: false,
+      schema: { type: :integer },
       description: "Page number, starting at 1"
-    parameter name: :per_page, in: :query, type: :integer, required: false,
+    parameter name: :per_page, in: :query, required: false,
+      schema: { type: :integer },
       description: "Items per page, 1-100. Defaults to 25"
   end
 
@@ -335,7 +341,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ bearer_auth: [] }]
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "delivery request found" do
         schema success_envelope.call("Delivery request retrieved successfully", delivery_request_schema)
@@ -362,7 +368,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       security [{ bearer_auth: [] }]
       description "Customer-only action. Requests can be cancelled while pending, finding_driver, assigned, or accepted."
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "request cancelled" do
         schema success_envelope.call("Delivery request cancelled", delivery_request_schema)
@@ -388,7 +394,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ bearer_auth: [] }]
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "request accepted" do
         schema success_envelope.call("Delivery request accepted", delivery_request_schema)
@@ -414,7 +420,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ bearer_auth: [] }]
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "request picked up" do
         schema success_envelope.call("Delivery request picked up", delivery_request_schema)
@@ -440,7 +446,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ bearer_auth: [] }]
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "request delivered" do
         schema success_envelope.call("Delivery request delivered", delivery_request_schema)
@@ -466,7 +472,7 @@ RSpec.describe "api/v1/delivery_requests", type: :request do
       produces "application/json"
       security [{ bearer_auth: [] }]
 
-      parameter name: :id, in: :path, type: :string, format: :uuid
+      parameter name: :id, in: :path, required: true, schema: { type: :string, format: :uuid }
 
       response "200", "request rejected" do
         schema success_envelope.call("Delivery request rejected", delivery_request_schema)

@@ -10,30 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_24_163334) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_26_144600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
-
-  create_table "addresses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "line1", null: false
-    t.string "line2"
-    t.string "city", null: false
-    t.string "postal_code"
-    t.decimal "latitude", precision: 10, scale: 6, null: false
-    t.decimal "longitude", precision: 10, scale: 6, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "nearest_town"
-    t.uuid "country_id"
-    t.uuid "county_id"
-    t.string "building_name"
-    t.string "floor"
-    t.string "door"
-    t.text "instructions"
-    t.index ["country_id"], name: "index_addresses_on_country_id"
-    t.index ["county_id"], name: "index_addresses_on_county_id"
-  end
 
   create_table "counties", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
@@ -76,16 +56,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_163334) do
   create_table "delivery_requests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "driver_id"
-    t.uuid "pickup_address_id", null: false
-    t.uuid "delivery_address_id", null: false
     t.string "package_description", null: false
     t.decimal "package_weight", precision: 8, scale: 2, null: false
     t.integer "status", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["delivery_address_id"], name: "index_delivery_requests_on_delivery_address_id"
+    t.jsonb "pickup_address", default: {}, null: false
+    t.jsonb "delivery_address", default: {}, null: false
     t.index ["driver_id"], name: "index_delivery_requests_on_driver_id"
-    t.index ["pickup_address_id"], name: "index_delivery_requests_on_pickup_address_id"
     t.index ["status"], name: "index_delivery_requests_on_status"
     t.index ["user_id"], name: "index_delivery_requests_on_user_id"
   end
@@ -101,18 +79,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_163334) do
     t.index ["driver_id"], name: "index_driver_locations_on_driver_id"
   end
 
-  create_table "drivers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "name", null: false
-    t.string "email", null: false
-    t.string "password_digest", null: false
-    t.string "phone"
-    t.integer "status", default: 0, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_drivers_on_email", unique: true
-    t.index ["status"], name: "index_drivers_on_status"
-  end
-
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name", null: false
     t.string "email", null: false
@@ -120,16 +86,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_24_163334) do
     t.string "phone"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "type"
+    t.integer "role", default: 0, null: false
+    t.integer "status", default: 0, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["role"], name: "index_users_on_role"
+    t.index ["status"], name: "index_users_on_status"
+    t.index ["type"], name: "index_users_on_type"
   end
 
-  add_foreign_key "addresses", "counties"
-  add_foreign_key "addresses", "countries"
   add_foreign_key "counties", "countries"
   add_foreign_key "delivery_events", "delivery_requests"
-  add_foreign_key "delivery_requests", "addresses", column: "delivery_address_id"
-  add_foreign_key "delivery_requests", "addresses", column: "pickup_address_id"
-  add_foreign_key "delivery_requests", "drivers"
   add_foreign_key "delivery_requests", "users"
-  add_foreign_key "driver_locations", "drivers"
+  add_foreign_key "delivery_requests", "users", column: "driver_id"
+  add_foreign_key "driver_locations", "users", column: "driver_id"
 end

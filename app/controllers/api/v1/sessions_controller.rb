@@ -13,21 +13,21 @@ module Api
       private
 
       def login_payload(principal)
-        if principal.is_a?(User)
-          {
-            type: "user",
-            token: AuthToken.issue(principal),
-            token_type: "Bearer",
-            expires_in: 24.hours.to_i,
-            principal: UserSerializer.new(principal).as_json
-          }
-        else
+        if principal.is_a?(Driver)
           {
             type: "driver",
             token: AuthToken.issue(principal),
             token_type: "Bearer",
             expires_in: 24.hours.to_i,
             principal: DriverSerializer.new(principal).as_json
+          }
+        else
+          {
+            type: "user",
+            token: AuthToken.issue(principal),
+            token_type: "Bearer",
+            expires_in: 24.hours.to_i,
+            principal: UserSerializer.new(principal).as_json
           }
         end
       end
@@ -48,7 +48,7 @@ module Api
       end
 
       def authenticate_user(email, password)
-        user = User.find_by(email: email)
+        user = User.customers.find_by(email: email)
         user if user&.authenticate(password)
       end
 

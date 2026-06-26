@@ -10,12 +10,9 @@ module DeliveryRequests
 
     def call
       ActiveRecord::Base.transaction do
-        pickup_address = Address.create!(pickup_address_attrs)
-        delivery_address = Address.create!(delivery_address_attrs)
-
         delivery_request = user.delivery_requests.create!(
-          pickup_address: pickup_address,
-          delivery_address: delivery_address,
+          pickup_address: pickup_address_attrs,
+          delivery_address: delivery_address_attrs,
           package_description: package_description,
           package_weight: package_weight,
           status: :pending

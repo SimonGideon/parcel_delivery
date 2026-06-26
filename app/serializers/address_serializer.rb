@@ -5,7 +5,6 @@ class AddressSerializer
 
   def as_json(*_args)
     {
-      id: address.id,
       line1: address.line1,
       line2: address.line2,
       city: address.city,

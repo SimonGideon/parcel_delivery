@@ -14,28 +14,26 @@ paths:
       parameters:
       - name: delivery_request_id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       - name: event_type
         in: query
         required: false
-        enum:
-        - created
-        - finding_driver
-        - driver_assigned
-        - driver_accepted
-        - driver_rejected
-        - picked_up
-        - in_transit
-        - delivered
-        - cancelled
-        description: "Filter to one lifecycle event type:\n * `created` \n * `finding_driver`
-          \n * `driver_assigned` \n * `driver_accepted` \n * `driver_rejected` \n
-          * `picked_up` \n * `in_transit` \n * `delivered` \n * `cancelled` \n "
         schema:
           type: string
+          enum:
+          - created
+          - finding_driver
+          - driver_assigned
+          - driver_accepted
+          - driver_rejected
+          - picked_up
+          - in_transit
+          - delivered
+          - cancelled
+        description: Filter to one lifecycle event type
       - name: page
         in: query
         required: false
@@ -143,72 +141,71 @@ paths:
       - name: status
         in: query
         required: false
+        schema:
+          type: string
         description: Filter by lifecycle status. Allowed values are role-specific
           and are returned in meta.filters.allowed_statuses. Customer tokens may filter
           all lifecycle statuses; driver tokens may filter only driver-visible statuses.
-        schema:
-          type: string
       - name: driver_id
         in: query
-        format: uuid
         required: false
-        description: Filter visible requests by assigned driver id
         schema:
           type: string
+          format: uuid
+        description: Filter visible requests by assigned driver id
       - name: created_from
         in: query
-        format: date-time
         required: false
-        description: Filter requests created at or after this ISO8601 timestamp
         schema:
           type: string
+          format: date-time
+        description: Filter requests created at or after this ISO8601 timestamp
       - name: created_to
         in: query
-        format: date-time
         required: false
-        description: Filter requests created at or before this ISO8601 timestamp
         schema:
           type: string
+          format: date-time
+        description: Filter requests created at or before this ISO8601 timestamp
       - name: q
         in: query
         required: false
-        description: Search package_description plus pickup/delivery city, nearest_town,
-          and line1
         schema:
           type: string
+        description: Search package_description plus pickup/delivery city, nearest_town,
+          and line1
       - name: sort_by
         in: query
         required: false
-        enum:
-        - created_at
-        - updated_at
-        - status
-        - package_weight
-        description: "Sort field. Defaults to created_at:\n * `created_at` \n * `updated_at`
-          \n * `status` \n * `package_weight` \n "
         schema:
           type: string
+          enum:
+          - created_at
+          - updated_at
+          - status
+          - package_weight
+        description: Sort field. Defaults to created_at
       - name: sort_direction
         in: query
         required: false
-        enum:
-        - asc
-        - desc
-        description: Sort direction. Defaults to desc
         schema:
           type: string
+          enum:
+          - asc
+          - desc
+        description: Sort direction. Defaults to desc
       - name: page
         in: query
         required: false
-        description: Page number, starting at 1
         schema:
           type: integer
+        description: Page number, starting at 1
       - name: per_page
         in: query
         required: false
-        description: Items per page, 1-100. Defaults to 25
         schema:
           type: integer
+        description: Items per page, 1-100. Defaults to 25
       responses:
         '200':
           description: customer requests returned
@@ -252,9 +249,6 @@ paths:
                         pickup_address:
                           type: object
                           properties:
-                            id:
-                              type: string
-                              format: uuid
                             line1:
                               type: string
                               example: 123 Main St
@@ -316,9 +310,6 @@ paths:
                         delivery_address:
                           type: object
                           properties:
-                            id:
-                              type: string
-                              format: uuid
                             line1:
                               type: string
                               example: 123 Main St
@@ -474,72 +465,71 @@ paths:
       - name: status
         in: query
         required: false
+        schema:
+          type: string
         description: Filter by lifecycle status. Allowed values are role-specific
           and are returned in meta.filters.allowed_statuses. Customer tokens may filter
           all lifecycle statuses; driver tokens may filter only driver-visible statuses.
-        schema:
-          type: string
       - name: driver_id
         in: query
-        format: uuid
         required: false
-        description: Filter visible requests by assigned driver id
         schema:
           type: string
+          format: uuid
+        description: Filter visible requests by assigned driver id
       - name: created_from
         in: query
-        format: date-time
         required: false
-        description: Filter requests created at or after this ISO8601 timestamp
         schema:
           type: string
+          format: date-time
+        description: Filter requests created at or after this ISO8601 timestamp
       - name: created_to
         in: query
-        format: date-time
         required: false
-        description: Filter requests created at or before this ISO8601 timestamp
         schema:
           type: string
+          format: date-time
+        description: Filter requests created at or before this ISO8601 timestamp
       - name: q
         in: query
         required: false
-        description: Search package_description plus pickup/delivery city, nearest_town,
-          and line1
         schema:
           type: string
+        description: Search package_description plus pickup/delivery city, nearest_town,
+          and line1
       - name: sort_by
         in: query
         required: false
-        enum:
-        - created_at
-        - updated_at
-        - status
-        - package_weight
-        description: "Sort field. Defaults to created_at:\n * `created_at` \n * `updated_at`
-          \n * `status` \n * `package_weight` \n "
         schema:
           type: string
+          enum:
+          - created_at
+          - updated_at
+          - status
+          - package_weight
+        description: Sort field. Defaults to created_at
       - name: sort_direction
         in: query
         required: false
-        enum:
-        - asc
-        - desc
-        description: Sort direction. Defaults to desc
         schema:
           type: string
+          enum:
+          - asc
+          - desc
+        description: Sort direction. Defaults to desc
       - name: page
         in: query
         required: false
-        description: Page number, starting at 1
         schema:
           type: integer
+        description: Page number, starting at 1
       - name: per_page
         in: query
         required: false
-        description: Items per page, 1-100. Defaults to 25
         schema:
           type: integer
+        description: Items per page, 1-100. Defaults to 25
       responses:
         '200':
           description: driver requests returned
@@ -583,9 +573,6 @@ paths:
                         pickup_address:
                           type: object
                           properties:
-                            id:
-                              type: string
-                              format: uuid
                             line1:
                               type: string
                               example: 123 Main St
@@ -647,9 +634,6 @@ paths:
                         delivery_address:
                           type: object
                           properties:
-                            id:
-                              type: string
-                              format: uuid
                             line1:
                               type: string
                               example: 123 Main St
@@ -846,9 +830,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -910,9 +891,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1184,10 +1162,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: delivery request found
@@ -1229,9 +1207,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1293,9 +1268,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1422,10 +1394,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: request cancelled
@@ -1467,9 +1439,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1531,9 +1500,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1658,10 +1624,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: request accepted
@@ -1703,9 +1669,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1767,9 +1730,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -1894,10 +1854,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: request picked up
@@ -1939,9 +1899,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2003,9 +1960,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2130,10 +2084,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: request delivered
@@ -2175,9 +2129,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2239,9 +2190,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2366,10 +2314,10 @@ paths:
       parameters:
       - name: id
         in: path
-        format: uuid
         required: true
         schema:
           type: string
+          format: uuid
       responses:
         '200':
           description: request rejected
@@ -2411,9 +2359,6 @@ paths:
                       pickup_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2475,9 +2420,6 @@ paths:
                       delivery_address:
                         type: object
                         properties:
-                          id:
-                            type: string
-                            format: uuid
                           line1:
                             type: string
                             example: 123 Main St
@@ -2807,16 +2749,16 @@ paths:
       parameters:
       - name: country_id
         in: query
-        format: uuid
         required: false
         schema:
           type: string
+          format: uuid
       - name: q
         in: query
         required: false
-        description: Search counties by name (case-insensitive, partial match)
         schema:
           type: string
+        description: Search counties by name (case-insensitive, partial match)
       - name: page
         in: query
         required: false
